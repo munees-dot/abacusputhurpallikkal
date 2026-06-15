@@ -124,10 +124,92 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
 #dashboard-page .stat-card{padding:10px 12px}#dashboard-page .stat-value{font-size:16px!important}#dashboard-page .stat-label{font-size:10px}#dashboard-page .stat-sub{font-size:10px}#dashboard-page .card-header{padding:10px 14px;font-size:12px}#dashboard-page .card-body{padding:10px!important}#dashboard-page canvas{max-height:160px}#dashboard-page .container{max-width:700px}
 .sm-table td{vertical-align:middle}
 @media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+.login-screen{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-box{background:white;border-radius:20px;padding:40px;width:380px;max-width:95vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.login-logo{width:70px;height:70px;background:var(--gold);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:var(--navy);margin:0 auto 16px}
+.login-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);background:white;transition:all .2s}
+.pin-dot.filled{background:var(--navy);border-color:var(--navy)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.pin-btn{padding:16px;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;font-size:20px;font-weight:700;cursor:pointer;color:var(--navy);transition:all .15s;font-family:inherit}
+.pin-btn:hover{background:var(--navy);color:var(--gold);border-color:var(--navy)}
+.pin-btn:active{transform:scale(.95)}
+.pin-error{color:var(--red);font-size:13px;font-weight:600;min-height:20px;margin-bottom:8px}
+.teacher-att-screen{position:fixed;inset:0;background:var(--cream);z-index:9998;display:none;overflow-y:auto}
+.teacher-header{background:var(--navy);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.teacher-header h2{color:white;font-size:16px;font-weight:700}
+.teacher-header .date-badge{background:var(--gold);color:var(--navy);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo" id="login-logo-display">A</div>
+    <div class="login-title">Abacus Academy</div>
+    <div class="login-sub">Admin Portal — Enter PIN to continue</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinPress(1)">1</button>
+      <button class="pin-btn" onclick="pinPress(2)">2</button>
+      <button class="pin-btn" onclick="pinPress(3)">3</button>
+      <button class="pin-btn" onclick="pinPress(4)">4</button>
+      <button class="pin-btn" onclick="pinPress(5)">5</button>
+      <button class="pin-btn" onclick="pinPress(6)">6</button>
+      <button class="pin-btn" onclick="pinPress(7)">7</button>
+      <button class="pin-btn" onclick="pinPress(8)">8</button>
+      <button class="pin-btn" onclick="pinPress(9)">9</button>
+      <button class="pin-btn" onclick="pinClear()" style="font-size:14px">⌫</button>
+      <button class="pin-btn" onclick="pinPress(0)">0</button>
+      <button class="pin-btn" onclick="pinClear(true)" style="font-size:12px">Clear</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted)">Default PIN: <strong>1234</strong> — Change in Setup</div>
+  </div>
+</div>
+
+<!-- TEACHER ATTENDANCE SCREEN -->
+<div class="teacher-att-screen" id="teacherAttScreen">
+  <div class="teacher-header">
+    <div>
+      <h2 id="teacher-att-title">Class Attendance</h2>
+      <div style="color:var(--gold-light);font-size:12px;margin-top:2px" id="teacher-att-date"></div>
+    </div>
+    <div class="date-badge" id="teacher-date-badge"></div>
+  </div>
+  <div style="padding:16px;max-width:600px;margin:0 auto">
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button onclick="teacherMarkAll('P')" style="flex:1;padding:10px;background:var(--green);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">✓ All Present</button>
+      <button onclick="teacherMarkAll('A')" style="flex:1;padding:10px;background:var(--red);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">✗ All Absent</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--green)" id="t-present-count">0</div>
+        <div style="font-size:11px;color:var(--muted)">Present</div>
+      </div>
+      <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--red)" id="t-absent-count">0</div>
+        <div style="font-size:11px;color:var(--muted)">Absent</div>
+      </div>
+      <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--navy)" id="t-pct-count">0%</div>
+        <div style="font-size:11px;color:var(--muted)">Attendance</div>
+      </div>
+    </div>
+    <div id="teacher-att-list"></div>
+    <button onclick="saveTeacherAttendance()" style="width:100%;padding:14px;background:var(--gold);color:var(--navy);border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:15px;margin-top:16px">💾 Save Attendance</button>
+  </div>
+</div>
 
 <header>
   <div class="logo">
@@ -140,6 +222,7 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
   <div class="header-right">
     <div class="sync-status"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Ready</span></div>
     <button class="settings-btn" onclick="openSettings()">⚙ Settings</button>
+    <button class="settings-btn" onclick="logoutAdmin()" style="background:rgba(201,168,76,.2);border-color:var(--gold)">🔒 Lock</button>
   </div>
 </header>
 
@@ -616,6 +699,25 @@ Abacus Academy</textarea></div>
       <div id="setup-status" style="margin-top:12px;font-size:13px;display:none"></div>
     </div>
   </div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">🔐 Admin PIN</div>
+    <div class="card-body">
+      <div class="form-group"><label>Current PIN</label><input type="password" id="current-pin-input" placeholder="Enter current PIN" maxlength="4"></div>
+      <div class="form-group"><label>New PIN (4 digits)</label><input type="number" id="new-pin-input" placeholder="e.g. 5678" maxlength="4"></div>
+      <button onclick="changePin()" style="width:100%;padding:11px;background:var(--navy);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">🔐 Change PIN</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">📱 Class QR Codes (for Teacher Attendance)</div>
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Class room-ൽ ഈ QR code print ചെയ്ത് paste ചെയ്യൂ. Teacher mobile-ൽ scan ചെയ്ത് attendance mark ചെയ്യാം.</p>
+      <div id="qr-codes-container" style="display:grid;grid-template-columns:1fr 1fr;gap:16px"></div>
+      <button onclick="generateQRCodes()" style="width:100%;margin-top:16px;padding:11px;background:var(--gold);color:var(--navy);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">🔄 Generate QR Codes</button>
+      <button onclick="printQRCodes()" style="width:100%;margin-top:8px;padding:11px;background:var(--navy);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px">🖨 Print All QR Codes</button>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header" style="background:#c0392b">⚠ Danger Zone</div>
     <div class="card-body">
@@ -850,17 +952,224 @@ const BUILTIN_STUDENTS = {
 let nextBill = null;
 
 // ─── INIT ────────────────────────────────────────────────
-window.onload = () => {
-  // Init classes
-  updateAllClassDropdowns();
-  // Auto-apply saved logo
-  const savedLogo = localStorage.getItem('abacus_logo');
-  if (savedLogo) applyLogoToHeader(savedLogo);
-  if (!SCRIPT_URL) {
-    openSettings();
-  } else {
-    loadData();
+// ─── LOGIN SYSTEM ────────────────────────────────────────────
+var ADMIN_PIN = localStorage.getItem('abacus_pin') || '1234';
+var pinEntry = '';
+var teacherClass = null;
+
+function checkQRLogin() {
+  const params = new URLSearchParams(window.location.search);
+  const cls = params.get('class');
+  const token = params.get('token');
+  if (cls && token === btoa('abacus_' + cls)) {
+    // Teacher QR login
+    teacherClass = cls;
+    document.getElementById('loginScreen').style.display = 'none';
+    openTeacherAtt(cls);
+    return true;
   }
+  return false;
+}
+
+function pinPress(num) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += num;
+  updatePinDots();
+  if (pinEntry.length === 4) {
+    setTimeout(checkPin, 100);
+  }
+}
+
+function pinClear(all) {
+  if (all) { pinEntry = ''; }
+  else { pinEntry = pinEntry.slice(0,-1); }
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+}
+
+function updatePinDots() {
+  for (var i=0;i<4;i++) {
+    document.getElementById('dot-'+i).classList.toggle('filled', i < pinEntry.length);
+  }
+}
+
+function checkPin() {
+  if (pinEntry === ADMIN_PIN) {
+    document.getElementById('loginScreen').style.display = 'none';
+    pinEntry = '';
+    updatePinDots();
+    // Normal portal load
+    initPortal();
+  } else {
+    document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
+    pinEntry = '';
+    updatePinDots();
+    // Shake effect
+    var box = document.querySelector('.login-box');
+    box.style.transform = 'translateX(-10px)';
+    setTimeout(()=>box.style.transform='translateX(10px)',100);
+    setTimeout(()=>box.style.transform='',200);
+  }
+}
+
+function logoutAdmin() {
+  if (!confirm('Lock portal?')) return;
+  pinEntry = '';
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function changePin() {
+  const current = document.getElementById('current-pin-input').value;
+  const newPin = document.getElementById('new-pin-input').value;
+  if (current !== ADMIN_PIN) { showToast('Current PIN wrong!', 'error'); return; }
+  if (newPin.length !== 4 || isNaN(newPin)) { showToast('PIN must be 4 digits', 'error'); return; }
+  ADMIN_PIN = newPin;
+  localStorage.setItem('abacus_pin', newPin);
+  document.getElementById('current-pin-input').value = '';
+  document.getElementById('new-pin-input').value = '';
+  showToast('PIN changed successfully!', 'success');
+}
+
+// ─── TEACHER ATTENDANCE ───────────────────────────────────────
+var teacherAttData = {};
+
+function openTeacherAtt(cls) {
+  const screen = document.getElementById('teacherAttScreen');
+  screen.style.display = 'block';
+  teacherClass = cls;
+
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-GB', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  const dateKey = today.toISOString().split('T')[0];
+
+  document.getElementById('teacher-att-title').textContent = cls + ' — Attendance';
+  document.getElementById('teacher-att-date').textContent = dateStr;
+  document.getElementById('teacher-date-badge').textContent = today.toLocaleDateString('en-GB');
+
+  // Load existing attendance for today
+  const attKey = dateKey + '_' + cls;
+  teacherAttData = JSON.parse(JSON.stringify(attendanceDB[attKey] || {}));
+
+  renderTeacherAttList(cls, dateKey);
+}
+
+function renderTeacherAttList(cls, dateKey) {
+  const students = STUDENTS_MASTER.filter(s => s.class === cls);
+  let p=0, a=0;
+
+  const list = document.getElementById('teacher-att-list');
+  list.innerHTML = students.map((s,i) => {
+    const status = teacherAttData[s.id] || 'P';
+    if (status==='P') p++; else a++;
+    const pStyle = status==='P'
+      ? 'flex:1;padding:10px;background:var(--green);color:white;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:14px'
+      : 'flex:1;padding:10px;background:var(--green-light);color:var(--green);border:1.5px solid var(--green);border-radius:7px;font-weight:700;cursor:pointer;font-size:14px';
+    const aStyle = status==='A'
+      ? 'flex:1;padding:10px;background:var(--red);color:white;border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:14px'
+      : 'flex:1;padding:10px;background:var(--red-light);color:var(--red);border:1.5px solid var(--red);border-radius:7px;font-weight:700;cursor:pointer;font-size:14px';
+    const rowBg = status==='A' ? 'background:#fff5f5' : 'background:white';
+    return '<div style="'+rowBg+';border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px">'
+      + '<div style="font-size:13px;font-weight:700;color:var(--muted);width:28px">'+(i+1)+'</div>'
+      + '<div style="flex:1"><div style="font-weight:700;font-size:14px;color:var(--navy)">'+s.name+'</div><div style="font-size:11px;color:var(--muted)">ID: '+s.id+'</div></div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<button style="'+pStyle+'" onclick="setTeacherAtt(\"'+s.id+'\",\"P\")">P</button>'
+      + '<button style="'+aStyle+'" onclick="setTeacherAtt(\"'+s.id+'\",\"A\")">A</button>'
+      + '</div></div>';
+  }).join('');
+
+  const total = p+a;
+  const pct = total>0 ? Math.round(p/total*100) : 0;
+  document.getElementById('t-present-count').textContent = p;
+  document.getElementById('t-absent-count').textContent = a;
+  document.getElementById('t-pct-count').textContent = pct+'%';
+}
+
+function setTeacherAtt(id, status) {
+  teacherAttData[id] = status;
+  const today = new Date().toISOString().split('T')[0];
+  renderTeacherAttList(teacherClass, today);
+}
+
+function teacherMarkAll(status) {
+  STUDENTS_MASTER.filter(s=>s.class===teacherClass).forEach(s => { teacherAttData[s.id]=status; });
+  const today = new Date().toISOString().split('T')[0];
+  renderTeacherAttList(teacherClass, today);
+}
+
+function saveTeacherAttendance() {
+  const today = new Date().toISOString().split('T')[0];
+  const attKey = today + '_' + teacherClass;
+  attendanceDB[attKey] = JSON.parse(JSON.stringify(teacherAttData));
+  localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
+  showToast('Attendance saved for ' + teacherClass, 'success');
+  setTimeout(() => {
+    document.getElementById('teacherAttScreen').style.display = 'none';
+    window.location.href = window.location.pathname;
+  }, 1500);
+}
+
+// ─── QR CODE GENERATOR ───────────────────────────────────────
+function generateQRCodes() {
+  const container = document.getElementById('qr-codes-container');
+  container.innerHTML = '';
+  const classes = CLASSES_LIST || ['10 MM','10 EM'];
+  const baseUrl = window.location.href.split('?')[0];
+
+  classes.forEach(cls => {
+    const token = btoa('abacus_' + cls);
+    const url = baseUrl + '?class=' + encodeURIComponent(cls) + '&token=' + token;
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--cream);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center';
+    card.innerHTML = '<div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px">'+cls+'</div>'
+      + '<div id="qr-'+cls.replace(' ','-')+'" style="margin:0 auto 10px;display:inline-block"></div>'
+      + '<div style="font-size:10px;color:var(--muted);word-break:break-all;margin-top:8px">Scan to mark attendance</div>';
+    container.appendChild(card);
+
+    setTimeout(() => {
+      const qrDiv = document.getElementById('qr-'+cls.replace(' ','-'));
+      if (qrDiv && typeof QRCode !== 'undefined') {
+        new QRCode(qrDiv, { text: url, width: 140, height: 140, colorDark:'#1a2744', colorLight:'#ffffff' });
+      }
+    }, 100);
+  });
+}
+
+function printQRCodes() {
+  const classes = CLASSES_LIST || ['10 MM','10 EM'];
+  const baseUrl = window.location.href.split('?')[0];
+  let qrItems = classes.map(cls => {
+    const token = btoa('abacus_' + cls);
+    const url = baseUrl + '?class=' + encodeURIComponent(cls) + '&token=' + token;
+    return { cls, url };
+  });
+
+  const win = window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html><head><title>QR Codes — Abacus Academy</title>'
+    + '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>'
+    + '<style>body{font-family:Arial,sans-serif;padding:20px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}.card{border:2px solid #1a2744;border-radius:12px;padding:20px;text-align:center;page-break-inside:avoid}.title{font-size:18px;font-weight:700;color:#1a2744;margin-bottom:12px}.sub{font-size:12px;color:#888;margin-top:10px}h1{text-align:center;color:#1a2744;margin-bottom:20px}@media print{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}</style>'
+    + '</head><body>'
+    + '<h1>Abacus Academy — Class Attendance QR Codes</h1>'
+    + '<div class="grid">'
+    + qrItems.map((item,i) => '<div class="card"><div class="title">'+item.cls+'</div><div id="qr'+i+'"></div><div class="sub">Scan to mark student attendance</div></div>').join('')
+    + '</div>'
+    + '<script>window.onload=function(){'
+    + qrItems.map((item,i) => 'new QRCode(document.getElementById("qr'+i+'"),{text:"'+item.url+'",width:180,height:180,colorDark:"#1a2744"});').join('')
+    + 'setTimeout(function(){window.print();},800);}<\/script>'
+    + '</body></html>');
+  win.document.close();
+}
+
+window.onload = () => {
+  // Check for QR login first
+  if (checkQRLogin()) {
+    // Teacher mode — load student data only
+    return;
+  }
+  // Show login screen
+  document.getElementById('loginScreen').style.display = 'flex';
 };
 
 // ─── SETTINGS ────────────────────────────────────────────
@@ -3784,6 +4093,7 @@ function printSlip() {
 
 // ─── SETUP TAB ───────────────────────────────────────────────
 function loadSetupValues() {
+  generateQRCodes();
   document.getElementById('setup-script-url').value = SCRIPT_URL || '';
   document.getElementById('setup-bill-no').value = nextBill || '';
   renderClassList();
