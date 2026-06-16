@@ -198,6 +198,10 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
         <div style="font-size:11px;color:var(--muted)">Present</div>
       </div>
       <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#e67e22" id="t-late-count">0</div>
+        <div style="font-size:11px;color:var(--muted)">Late</div>
+      </div>
+      <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:10px 16px;flex:1;text-align:center">
         <div style="font-size:22px;font-weight:700;color:var(--red)" id="t-absent-count">0</div>
         <div style="font-size:11px;color:var(--muted)">Absent</div>
       </div>
@@ -234,6 +238,7 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
   <button class="nav-tab" onclick="showTab('pending')" id="tab-pending">⚠ Pending</button>
   <button class="nav-tab" onclick="showTab('attendance')" id="tab-attendance">📅 Attendance</button>
   <button class="nav-tab" onclick="showTab('expense')" id="tab-expense">💸 Expense</button>
+  <button class="nav-tab" onclick="showTab('att-report')" id="tab-att-report">📋 Att. Report</button>
   <button class="nav-tab" onclick="showTab('timetable')" id="tab-timetable">📆 Timetable</button>
   <button class="nav-tab" onclick="showTab('reports')" id="tab-reports">🖨 Reports</button>
   <button class="nav-tab" onclick="showTab('fee-slip')" id="tab-fee-slip">🧾 Fee Slip</button>
@@ -446,13 +451,14 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
   </div>
   <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
     <div class="sm-stat"><strong id="att-present" style="color:var(--green)">0</strong><span>Present</span></div>
+    <div class="sm-stat"><strong id="att-late" style="color:#e67e22">0</strong><span>Late Coming</span></div>
     <div class="sm-stat"><strong id="att-absent" style="color:var(--red)">0</strong><span>Absent</span></div>
     <div class="sm-stat"><strong id="att-total">0</strong><span>Total</span></div>
     <div class="sm-stat"><strong id="att-pct" style="color:var(--navy)">0%</strong><span>Attendance %</span></div>
   </div>
-  <div class="sm-table-wrap" style="max-width:600px">
-    <table class="sm-table" style="width:600px;table-layout:fixed">
-      <thead><tr><th style="width:40px">#</th><th style="width:65px">ID</th><th>Name</th><th style="width:120px;text-align:center">Status</th></tr></thead>
+  <div class="sm-table-wrap" style="max-width:700px">
+    <table class="sm-table" style="min-width:500px">
+      <thead><tr><th style="width:40px">#</th><th style="width:65px">ID</th><th>Name</th><th style="width:180px;text-align:center">Status</th></tr></thead>
       <tbody id="att-tbody"></tbody>
     </table>
   </div>
@@ -503,6 +509,191 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
     </div>
   </div>
   <div class="card" style="margin-top:16px"><div class="card-header">📊 Category Summary</div><div class="card-body" id="exp-cat-summary" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px"></div></div>
+
+  <!-- Expense Log Full Table -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-header">
+      📒 Expense Log
+      <span class="badge" id="exp-log-count">0 entries</span>
+    </div>
+    <div style="padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+      <input type="text" id="exp-log-search" placeholder="🔍 Search description or category..." oninput="renderExpenseLog()"
+        style="flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+      <select id="exp-log-cat" onchange="renderExpenseLog()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+        <option value="">All Categories</option>
+        <option value="Salary">Salary</option>
+        <option value="Rent">Rent</option>
+        <option value="Electricity">Electricity</option>
+        <option value="Water">Water</option>
+        <option value="Internet">Internet</option>
+        <option value="Stationery">Stationery</option>
+        <option value="Maintenance">Maintenance</option>
+        <option value="Transport">Transport</option>
+        <option value="Miscellaneous">Miscellaneous</option>
+      </select>
+      <select id="exp-log-month" onchange="renderExpenseLog()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+        <option value="">All Months</option>
+        <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+        <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+        <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+        <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+      </select>
+      <select id="exp-log-sort" onchange="renderExpenseLog()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+        <option value="date-desc">Latest First</option>
+        <option value="date-asc">Oldest First</option>
+        <option value="amount-desc">Highest Amount</option>
+        <option value="amount-asc">Lowest Amount</option>
+        <option value="cat">Category A-Z</option>
+      </select>
+    </div>
+    <div class="record-count" id="exp-log-record-count">0 records</div>
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:var(--navy)">
+            <th style="padding:10px 12px;color:var(--gold);text-align:left;width:40px">#</th>
+            <th style="padding:10px 12px;color:var(--gold);text-align:left;width:100px">Date</th>
+            <th style="padding:10px 12px;color:var(--gold);text-align:left;width:120px">Category</th>
+            <th style="padding:10px 12px;color:var(--gold);text-align:left">Description</th>
+            <th style="padding:10px 12px;color:var(--gold);text-align:right;width:100px">Amount</th>
+            <th style="padding:10px 12px;color:var(--gold);text-align:center;width:60px">Edit</th>
+            <th style="padding:10px 12px;color:var(--gold);text-align:center;width:60px">Del</th>
+          </tr>
+        </thead>
+        <tbody id="exp-log-tbody">
+          <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">No expenses yet</td></tr>
+        </tbody>
+        <tfoot id="exp-log-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ATTENDANCE REPORT PAGE -->
+<div id="att-report-page" style="display:none">
+<div class="container" style="max-width:900px;padding:28px 16px">
+
+  <!-- Report Type Tabs -->
+  <div style="display:flex;gap:0;margin-bottom:16px;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:4px;width:fit-content">
+    <button onclick="setAttReportMode('daily')" id="ar-mode-daily" style="padding:8px 20px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:var(--navy);color:var(--gold)">📅 Daily</button>
+    <button onclick="setAttReportMode('weekly')" id="ar-mode-weekly" style="padding:8px 20px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--muted)">📆 Weekly</button>
+    <button onclick="setAttReportMode('monthly')" id="ar-mode-monthly" style="padding:8px 20px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--muted)">🗓 Monthly</button>
+    <button onclick="setAttReportMode('all')" id="ar-mode-all" style="padding:8px 20px;border:none;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--muted)">📊 All Time</button>
+  </div>
+
+  <!-- Controls -->
+  <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:flex-end">
+    <!-- Daily controls -->
+    <div id="ar-ctrl-daily">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px">Date</label>
+      <input type="date" id="ar-date" onchange="renderAttReport()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+    </div>
+    <!-- Weekly controls -->
+    <div id="ar-ctrl-weekly" style="display:none">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px">Week Starting</label>
+      <input type="date" id="ar-week-start" onchange="renderAttReport()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+    </div>
+    <!-- Monthly controls -->
+    <div id="ar-ctrl-monthly" style="display:none;display:flex;gap:10px">
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px">Month</label>
+        <select id="ar-month" onchange="renderAttReport()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+          <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+          <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+          <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px">Year</label>
+        <select id="ar-year" onchange="renderAttReport()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+          <option value="2026">2026</option><option value="2027">2027</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px">Class</label>
+      <select id="ar-class" onchange="renderAttReport()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+        <option value="all">All Classes</option>
+        <option value="10 MM">10 MM</option>
+        <option value="10 EM">10 EM</option>
+      </select>
+    </div>
+    <div id="ar-ctrl-filter">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px">Filter</label>
+      <select id="ar-filter" onchange="renderAttReport()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;background:white">
+        <option value="all">All Students</option>
+        <option value="P">Present Only</option>
+        <option value="L">Late Only</option>
+        <option value="A">Absent Only</option>
+      </select>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:8px">
+      <button onclick="printAttReport()" style="padding:9px 18px;background:var(--navy);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">🖨 Print</button>
+      <button onclick="shareAttReportWA()" style="padding:9px 18px;background:#25d366;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">📱 WhatsApp</button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px">
+    <div class="stat-card green" style="text-align:center">
+      <div class="stat-label">Present</div>
+      <div class="stat-value" id="ar-present" style="font-size:24px">0</div>
+    </div>
+    <div class="stat-card" style="text-align:center;background:#fff8f0">
+      <div class="stat-label" style="color:#e67e22">Late</div>
+      <div class="stat-value" id="ar-late" style="font-size:24px;color:#e67e22">0</div>
+    </div>
+    <div class="stat-card" style="text-align:center">
+      <div class="stat-label">Absent</div>
+      <div class="stat-value" id="ar-absent" style="font-size:24px;color:var(--red)">0</div>
+    </div>
+    <div class="stat-card" style="text-align:center">
+      <div class="stat-label">Total</div>
+      <div class="stat-value" id="ar-total" style="font-size:24px">0</div>
+    </div>
+    <div class="stat-card gold" style="text-align:center">
+      <div class="stat-label">Attendance %</div>
+      <div class="stat-value" id="ar-pct" style="font-size:24px">0%</div>
+    </div>
+  </div>
+
+  <!-- Report Table -->
+  <div class="card">
+    <div class="card-header" style="justify-content:space-between">
+      <span id="ar-title">Daily Attendance Report</span>
+      <span id="ar-date-display" style="font-size:12px;opacity:.8"></span>
+    </div>
+    <div class="sm-table-wrap">
+      <table class="sm-table" id="ar-table">
+        <thead id="ar-thead">
+          <tr>
+            <th style="width:40px">#</th>
+            <th style="width:65px">ID</th>
+            <th>Name</th>
+            <th style="width:80px">Class</th>
+            <th style="width:100px;text-align:center">Status</th>
+            <th style="width:80px;text-align:center">WA</th>
+          </tr>
+        </thead>
+        <tbody id="ar-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Absent List Card -->
+  <div class="card" style="margin-top:16px" id="ar-absent-card">
+    <div class="card-header" style="background:#c0392b">✗ Absent Students</div>
+    <div class="card-body" id="ar-absent-list" style="font-size:13px;line-height:2"></div>
+  </div>
+
+  <!-- Late List Card -->
+  <div class="card" style="margin-top:16px" id="ar-late-card">
+    <div class="card-header" style="background:#e67e22">⏰ Late Coming Students</div>
+    <div class="card-body" id="ar-late-list" style="font-size:13px;line-height:2"></div>
+  </div>
+
 </div>
 </div>
 
@@ -863,6 +1054,8 @@ Abacus Academy</textarea></div>
 
 // ─── STATE ───────────────────────────────────────────────
 let SCRIPT_URL = localStorage.getItem('abacus_script_url') || '';
+
+
 let allPayments = [];
 let studentMap = {};
 
@@ -999,7 +1192,15 @@ function checkPin() {
     pinEntry = '';
     updatePinDots();
     // Normal portal load
-    initPortal();
+    updateAllClassDropdowns();
+    const savedLogoInit = localStorage.getItem('abacus_logo');
+    if (savedLogoInit) applyLogoToHeader(savedLogoInit);
+    SCRIPT_URL = localStorage.getItem('abacus_script_url') || '';
+    if (!SCRIPT_URL) {
+      nextBill = 3499; updateBillDisplay();
+    } else {
+      loadData();
+    }
   } else {
     document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
     pinEntry = '';
@@ -1075,15 +1276,20 @@ function renderTeacherAttList(cls, dateKey) {
       + '<div style="flex:1"><div style="font-weight:700;font-size:14px;color:var(--navy)">'+s.name+'</div><div style="font-size:11px;color:var(--muted)">ID: '+s.id+'</div></div>'
       + '<div style="display:flex;gap:8px">'
       + '<button style="'+pStyle+'" onclick="setTeacherAtt(\"'+s.id+'\",\"P\")">P</button>'
+      + '<button style="background:'+(status==='L'?'#e67e22':'#fdecd2')+';color:'+(status==='L'?'white':'#e67e22')+';border:'+(status==='L'?'none':'1.5px solid #e67e22')+';border-radius:5px;padding:10px;font-weight:700;cursor:pointer;font-size:14px;flex:1" onclick="setTeacherAtt(\"'+s.id+'\",\"L\")">L</button>'
       + '<button style="'+aStyle+'" onclick="setTeacherAtt(\"'+s.id+'\",\"A\")">A</button>'
       + '</div></div>';
   }).join('');
 
-  const total = p+a;
-  const pct = total>0 ? Math.round(p/total*100) : 0;
+  let l = 0;
+  students.forEach(s => { if ((teacherAttData[s.id]||'P') === 'L') l++; });
+  const total = p+a+l;
+  const pct = total>0 ? Math.round((p+l)/total*100) : 0;
   document.getElementById('t-present-count').textContent = p;
   document.getElementById('t-absent-count').textContent = a;
   document.getElementById('t-pct-count').textContent = pct+'%';
+  const tlEl = document.getElementById('t-late-count');
+  if (tlEl) tlEl.textContent = l;
 }
 
 function setTeacherAtt(id, status) {
@@ -1147,6 +1353,7 @@ function printQRCodes() {
   });
 
   const win = window.open('','_blank');
+  if (!win) { showToast('Popup blocked! Allow popups and try again.', 'error'); return; }
   win.document.write('<!DOCTYPE html><html><head><title>QR Codes — Abacus Academy</title>'
     + '<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>'
     + '<style>body{font-family:Arial,sans-serif;padding:20px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}.card{border:2px solid #1a2744;border-radius:12px;padding:20px;text-align:center;page-break-inside:avoid}.title{font-size:18px;font-weight:700;color:#1a2744;margin-bottom:12px}.sub{font-size:12px;color:#888;margin-top:10px}h1{text-align:center;color:#1a2744;margin-bottom:20px}@media print{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}</style>'
@@ -1214,12 +1421,24 @@ async function loadData() {
     const res = await fetch(`${SCRIPT_URL}?action=getAll`, { method: 'GET' });
     const data = await res.json();
 
-    // Merge sheet payments with preloaded (sheet takes priority, avoid duplicates by bill no)
+    // Merge: sheet payments + preloaded (avoid bill number duplicates)
     const sheetPayments = data.payments || [];
-    const sheetBills = new Set(sheetPayments.map(p => p.bill));
-    const preloadedOnly = PRELOADED_PAYMENTS.filter(p => !sheetBills.has(p.bill));
+    const sheetBills = new Set(sheetPayments.map(p => parseInt(p.bill)));
+    const preloadedOnly = PRELOADED_PAYMENTS.filter(p => !sheetBills.has(parseInt(p.bill)));
     allPayments = [...sheetPayments, ...preloadedOnly];
-    allPayments.sort((a,b) => b.bill - a.bill);
+    // Sort latest date first
+    allPayments.sort(function(a,b) {
+      function pd(s) {
+        if (!s) return null;
+        var p = s.split('-');
+        if (p.length !== 3) return null;
+        return new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+      }
+      var da = pd(a.date), db = pd(b.date);
+      if (!da && !db) return b.bill - a.bill;
+      if (!da) return 1; if (!db) return -1;
+      return db - da || b.bill - a.bill;
+    });
     // Merge built-in students with any from sheet (sheet takes priority)
     studentMap = { ...BUILTIN_STUDENTS, ...(data.students || {}) };
     nextBill = data.nextBill || (allPayments.length > 0
@@ -1231,13 +1450,18 @@ async function loadData() {
     renderTable(allPayments);
     populateClassFilter();
     setSynced();
+    // Refresh Income Log with latest data
+    if (document.getElementById('income-log-page') && 
+        document.getElementById('income-log-page').style.display !== 'none') {
+      renderIncomeLog();
+    }
   } catch (e) {
     setSyncError();
     showToast('Cannot connect to Google Sheet. Student data loaded from Excel. Set Apps Script URL to save payments.', 'error');
     // Use built-in students even without script
     studentMap = { ...BUILTIN_STUDENTS };
     // Load preloaded payments from Excel
-    allPayments = [...PRELOADED_PAYMENTS];
+    allPayments = [...PRELOADED_PAYMENTS]; // fallback to preloaded
     nextBill = 3499;
     updateBillDisplay();
     updateStats();
@@ -1881,7 +2105,7 @@ const STUDENTS_MASTER = [
 
 // Tab switching
 function showTab(tab) {
-  ['fees','students','fees-register','income-log','pending','attendance','expense','timetable','reports','fee-slip','setup','dashboard'].forEach(t => {
+  ['fees','students','fees-register','income-log','pending','attendance','expense','att-report','timetable','reports','fee-slip','setup','dashboard'].forEach(t => {
     const page = document.getElementById(t + '-page');
     const btn  = document.getElementById('tab-' + t);
     if (page) page.style.display = t === tab ? 'block' : 'none';
@@ -1894,7 +2118,8 @@ function showTab(tab) {
   if (tab === 'attendance') renderAttendance();
   if (tab === 'timetable') renderTimetable();
   if (tab === 'reports') renderReports();
-  if (tab === 'expense') renderExpense();
+  if (tab === 'expense') { renderExpense(); renderExpenseLog(); }
+  if (tab === 'att-report') { setAttReportMode('daily'); }
   if (tab === 'pending') renderPending();
   if (tab === 'setup') loadSetupValues();
 }
@@ -2253,7 +2478,8 @@ function renderFeesRegister() {
 
 
 // ─── INCOME LOG ──────────────────────────────────────────────
-const PRELOADED_PAYMENTS = [
+// ─── INCOME LOG ──────────────────────────────────────────────
+var PRELOADED_PAYMENTS = [
   {"sl":"6002","name":"ADHRINATH","class":"10 MM","bill":3403,"amount":500,"date":"06-05-2026","synced":true},
   {"sl":"7012","name":"VASEEM MUHAMMED","class":"10 EM","bill":3404,"amount":500,"date":"06-05-2026","synced":true},
   {"sl":"7031","name":"MEHJA FATHIMA AT","class":"10 EM","bill":3405,"amount":500,"date":"06-05-2026","synced":true},
@@ -2391,6 +2617,8 @@ const PRELOADED_PAYMENTS = [
   {"sl":"6018","name":"MUHAMMED SHIBILI OP","class":"10 MM","bill":3086,"amount":2000,"date":"10-06-2026","synced":true},
   {"sl":"7032","name":"NIDHA FATHIMA KK","class":"10 EM","bill":3093,"amount":2000,"date":"14-06-2026","synced":true}
 ];
+
+allPayments = [...PRELOADED_PAYMENTS];
 
 var editingPaymentBill = null;
 
@@ -2735,6 +2963,19 @@ function lockBill() {
 // ─── ATTENDANCE ──────────────────────────────────────────────
 var attendanceDB = JSON.parse(localStorage.getItem('abacus_attendance') || '{}');
 
+function attBtn(id, status, current) {
+  var clrs = {
+    P: {on:'#2e7d52', off:'#e8f5ee', txt:'#2e7d52'},
+    L: {on:'#e67e22', off:'#fdecd2', txt:'#e67e22'},
+    A: {on:'#c0392b', off:'#fdecea', txt:'#c0392b'}
+  };
+  var c = clrs[status];
+  var isActive = (current === status);
+  var style = 'background:' + (isActive ? c.on : c.off) + ';color:' + (isActive ? 'white' : c.txt) + ';border-radius:5px;padding:4px 9px;font-weight:700;cursor:pointer;font-size:12px;margin:0 2px';
+  var onclick = "setAtt('" + id + "','" + status + "')";
+  return '<button style="' + style + '" onclick="' + onclick + '">' + status + '</button>';
+}
+
 function renderAttendance() {
   const dateEl = document.getElementById('att-date');
   if (!dateEl.value) {
@@ -2784,38 +3025,38 @@ function renderAttendance() {
   } else {
     tbody.innerHTML = students.map((s, i) => {
       const status = saved[s.id] || 'P';
-      if (status === 'P') present++; else absent++;
-      const pStyle = status === 'P'
-        ? 'background:var(--green);color:white;border:none;border-radius:5px;padding:4px 12px;font-weight:700;cursor:pointer;font-size:12px'
-        : 'background:var(--green-light);color:var(--green);border:1.5px solid var(--green);border-radius:5px;padding:4px 12px;font-weight:700;cursor:pointer;font-size:12px';
-      const aStyle = status === 'A'
-        ? 'background:var(--red);color:white;border:none;border-radius:5px;padding:4px 12px;font-weight:700;cursor:pointer;font-size:12px'
-        : 'background:var(--red-light);color:var(--red);border:1.5px solid var(--red);border-radius:5px;padding:4px 12px;font-weight:700;cursor:pointer;font-size:12px';
-      const rowBg = status === 'A' ? 'background:#fff5f5' : '';
+      if (status === 'P') present++; else if (status === 'L') {} else absent++;
+      const rowBg = status === 'A' ? 'background:#fff5f5' : status === 'L' ? 'background:#fff8f0' : '';
       return '<tr style="border-bottom:1px solid var(--border);' + rowBg + '">'
         + '<td style="padding:7px 8px;color:var(--muted);font-size:12px">' + (i+1) + '</td>'
         + '<td style="padding:7px 8px;font-weight:700;font-size:12px;color:var(--navy)">' + s.id + '</td>'
         + '<td style="padding:7px 8px;font-size:13px;font-weight:600">' + s.name + '</td>'
-        + '<td style="padding:7px 8px;text-align:center">'
-        + '<button style="' + pStyle + '" onclick="setAtt(" + JSON.stringify(s.id) + ",\'P\')">P</button> '
-        + '<button style="' + aStyle + '" onclick="setAtt(" + JSON.stringify(s.id) + ",\'A\')">A</button>'
+        + '<td style="padding:7px 8px;text-align:center;white-space:nowrap">'
+        + attBtn(s.id, 'P', status)
+        + attBtn(s.id, 'L', status)
+        + attBtn(s.id, 'A', status)
         + '</td></tr>';
     }).join('');
   }
 
   // Count from full class (not filtered) for stats
   const allStudents = STUDENTS_MASTER.filter(s => s.class === cls);
-  let totalP = 0, totalA = 0;
+  let totalP = 0, totalA = 0, totalL = 0;
   allStudents.forEach(s => {
     const st = saved[s.id] || 'P';
-    if (st === 'P') totalP++; else totalA++;
+    if (st === 'P') totalP++;
+    else if (st === 'L') totalL++;
+    else totalA++;
   });
-  const total = totalP + totalA;
-  const pct = total > 0 ? Math.round(totalP/total*100) : 0;
+  const total = totalP + totalA + totalL;
+  const pct = total > 0 ? Math.round((totalP + totalL)/total*100) : 0;
   document.getElementById('att-present').textContent = totalP;
   document.getElementById('att-absent').textContent = totalA;
   document.getElementById('att-total').textContent = total;
   document.getElementById('att-pct').textContent = pct + '%';
+  // Update late count
+  const lateEl = document.getElementById('att-late');
+  if (lateEl) lateEl.textContent = totalL;
 }
 
 function setAtt(id, status) {
@@ -2888,8 +3129,8 @@ function renderMonthlySummary() {
       const cells = dates.map(d => {
         const key = d + '_' + cls;
         const st = attendanceDB[key] ? (attendanceDB[key][s.id] || 'P') : '—';
-        if (st === 'P') p++;
-        const bg = st === 'P' ? 'color:var(--green);font-weight:700' : st === 'A' ? 'color:var(--red);font-weight:700' : 'color:var(--muted)';
+        if (st === 'P' || st === 'L') p++;
+        const bg = st === 'P' ? 'color:var(--green);font-weight:700' : st === 'A' ? 'color:var(--red);font-weight:700' : st === 'L' ? 'color:#e67e22;font-weight:700' : 'color:var(--muted)';
         return `<td style="padding:5px 4px;text-align:center;border-bottom:1px solid var(--border);${bg}">${st}</td>`;
       }).join('');
       const pct2 = dates.length > 0 ? Math.round(p/dates.length*100) : 0;
@@ -2991,8 +3232,9 @@ function addExpense() {
   document.getElementById('exp-desc').value = '';
   document.getElementById('exp-amount').value = '';
 
-  showToast('✓ Expense added: ' + category + ' ₹' + amount.toLocaleString('en-IN'), 'success');
+  showToast('Expense added: ' + category + ' Rs.' + amount.toLocaleString('en-IN'), 'success');
   renderExpense();
+  renderExpenseLog();
 }
 
 function deleteExpense(id) {
@@ -3001,6 +3243,7 @@ function deleteExpense(id) {
   localStorage.setItem('abacus_expenses', JSON.stringify(expenseDB));
   showToast('Expense deleted', 'error');
   renderExpense();
+  renderExpenseLog();
 }
 
 // ─── EDIT TOTAL FEE ──────────────────────────────────────────
@@ -3131,6 +3374,508 @@ function updateAllClassDropdowns() {
     });
     timetableDB.classes = [...CLASSES_LIST];
   }
+}
+
+// ─── EXPENSE LOG ─────────────────────────────────────────────
+var editingExpenseId = null;
+
+function renderExpenseLog() {
+  const q     = (document.getElementById('exp-log-search') || {}).value || '';
+  const cat   = (document.getElementById('exp-log-cat') || {}).value || '';
+  const month = (document.getElementById('exp-log-month') || {}).value || '';
+  const sort  = (document.getElementById('exp-log-sort') || {}).value || 'date-desc';
+
+  let filtered = [...expenseDB];
+
+  if (q) filtered = filtered.filter(e =>
+    (e.desc||'').toLowerCase().includes(q.toLowerCase()) ||
+    (e.category||'').toLowerCase().includes(q.toLowerCase())
+  );
+  if (cat) filtered = filtered.filter(e => e.category === cat);
+  if (month !== '') filtered = filtered.filter(e => new Date(e.date).getMonth() === parseInt(month));
+
+  // Sort
+  if (sort === 'date-desc') filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+  else if (sort === 'date-asc') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
+  else if (sort === 'amount-desc') filtered.sort((a,b) => b.amount - a.amount);
+  else if (sort === 'amount-asc') filtered.sort((a,b) => a.amount - b.amount);
+  else if (sort === 'cat') filtered.sort((a,b) => (a.category||'').localeCompare(b.category||''));
+
+  const total = filtered.reduce((s,e) => s + e.amount, 0);
+  const countEl = document.getElementById('exp-log-count');
+  const recordEl = document.getElementById('exp-log-record-count');
+  if (countEl) countEl.textContent = filtered.length + ' entries';
+  if (recordEl) recordEl.textContent = filtered.length + ' records · Total: ₹' + total.toLocaleString('en-IN');
+
+  const catIcons = {Salary:'👨‍🏫',Rent:'🏠',Electricity:'💡',Water:'💧',Internet:'🌐',Stationery:'📝',Maintenance:'🔧',Transport:'🚗',Miscellaneous:'📦'};
+
+  const tbody = document.getElementById('exp-log-tbody');
+  const tfoot = document.getElementById('exp-log-tfoot');
+  if (!tbody) return;
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--muted)">No expense records found</td></tr>';
+    if (tfoot) tfoot.innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((e, i) => {
+    const icon = catIcons[e.category] || '📦';
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:8px 12px;color:var(--muted);font-size:12px">' + (i+1) + '</td>'
+      + '<td style="padding:8px 12px;font-size:12px;color:var(--muted)">' + e.date + '</td>'
+      + '<td style="padding:8px 12px"><span style="background:var(--cream);border:1px solid var(--border);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">' + icon + ' ' + (e.category||'—') + '</span></td>'
+      + '<td style="padding:8px 12px;font-size:13px;color:var(--text)">' + (e.desc||'—') + '</td>'
+      + '<td style="padding:8px 12px;font-weight:700;color:var(--red);text-align:right">₹' + e.amount.toLocaleString('en-IN') + '</td>'
+      + '<td style="padding:8px 12px;text-align:center"><button onclick="openEditExpense(' + e.id + ')" style="background:var(--gold);color:var(--navy);border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:11px;font-weight:700">✏</button></td>'
+      + '<td style="padding:8px 12px;text-align:center"><button onclick="deleteExpense(' + e.id + ')" style="background:var(--red-light);color:var(--red);border:none;border-radius:5px;padding:3px 8px;cursor:pointer;font-size:11px;font-weight:700">🗑</button></td>'
+      + '</tr>';
+  }).join('');
+
+  // Footer total
+  if (tfoot) {
+    tfoot.innerHTML = '<tr style="background:var(--navy)">'
+      + '<td colspan="4" style="padding:10px 12px;color:white;font-weight:700">TOTAL (' + filtered.length + ' entries)</td>'
+      + '<td style="padding:10px 12px;color:var(--gold);font-weight:700;text-align:right">₹' + total.toLocaleString('en-IN') + '</td>'
+      + '<td colspan="2"></td></tr>';
+  }
+}
+
+function openEditExpense(id) {
+  const e = expenseDB.find(x => x.id === id);
+  if (!e) return;
+  editingExpenseId = id;
+  // Pre-fill the add form with existing values
+  document.getElementById('exp-date').value = e.date;
+  document.getElementById('exp-category').value = e.category;
+  document.getElementById('exp-desc').value = e.desc || '';
+  document.getElementById('exp-amount').value = e.amount;
+  // Change button text
+  const addBtn = document.querySelector('[onclick="addExpense()"]');
+  if (addBtn) {
+    addBtn.textContent = '✓ Update Expense';
+    addBtn.style.background = 'var(--navy)';
+    addBtn.style.color = 'white';
+    addBtn.onclick = updateExpense;
+  }
+  // Scroll to form
+  document.getElementById('exp-date').scrollIntoView({behavior:'smooth', block:'center'});
+  showToast('Editing expense — make changes and click Update', 'success');
+}
+
+function updateExpense() {
+  const date     = document.getElementById('exp-date').value;
+  const category = document.getElementById('exp-category').value;
+  const desc     = document.getElementById('exp-desc').value.trim();
+  const amount   = parseInt(document.getElementById('exp-amount').value);
+
+  if (!date || !category || !amount) { showToast('Fill all fields', 'error'); return; }
+
+  const idx = expenseDB.findIndex(x => x.id === editingExpenseId);
+  if (idx > -1) {
+    expenseDB[idx] = { id: editingExpenseId, date, category, desc, amount };
+    localStorage.setItem('abacus_expenses', JSON.stringify(expenseDB));
+    showToast('Expense updated!', 'success');
+  }
+
+  // Reset form
+  document.getElementById('exp-date').value = '';
+  document.getElementById('exp-category').value = '';
+  document.getElementById('exp-desc').value = '';
+  document.getElementById('exp-amount').value = '';
+  editingExpenseId = null;
+
+  // Reset button
+  const addBtn = document.querySelector('[onclick="updateExpense"]') || document.querySelector('button[onclick*="updateExpense"]');
+  if (addBtn) {
+    addBtn.textContent = '✓ Add Expense';
+    addBtn.style.background = 'var(--gold)';
+    addBtn.style.color = 'var(--navy)';
+    addBtn.onclick = addExpense;
+  }
+
+  renderExpense();
+  renderExpenseLog();
+}
+
+// ─── ATTENDANCE REPORT ───────────────────────────────────────
+var attReportMode = 'daily';
+
+function setAttReportMode(mode) {
+  attReportMode = mode;
+  var modes = ['daily','weekly','monthly','all'];
+  modes.forEach(function(m) {
+    var btn = document.getElementById('ar-mode-'+m);
+    var ctrl = document.getElementById('ar-ctrl-'+m);
+    if (btn) {
+      btn.style.background = m===mode ? 'var(--navy)' : 'transparent';
+      btn.style.color = m===mode ? 'var(--gold)' : 'var(--muted)';
+    }
+    if (ctrl) ctrl.style.display = m===mode ? 'block' : 'none';
+  });
+  // monthly uses flex
+  if (mode==='monthly') document.getElementById('ar-ctrl-monthly').style.display = 'flex';
+  // hide filter for weekly/monthly/all
+  var filterCtrl = document.getElementById('ar-ctrl-filter');
+  if (filterCtrl) filterCtrl.style.display = (mode==='daily') ? 'block' : 'none';
+  renderAttReport();
+}
+
+function getAttDates() {
+  var now = new Date();
+  if (attReportMode === 'daily') {
+    var dateEl = document.getElementById('ar-date');
+    if (!dateEl.value) dateEl.value = now.toISOString().split('T')[0];
+    return [dateEl.value];
+  } else if (attReportMode === 'weekly') {
+    var startEl = document.getElementById('ar-week-start');
+    if (!startEl.value) {
+      var monday = new Date(now);
+      monday.setDate(now.getDate() - now.getDay() + 1);
+      startEl.value = monday.toISOString().split('T')[0];
+    }
+    var start = new Date(startEl.value);
+    var dates = [];
+    for (var i=0; i<7; i++) {
+      var d = new Date(start);
+      d.setDate(start.getDate() + i);
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    return dates;
+  } else if (attReportMode === 'monthly') {
+    var month = parseInt(document.getElementById('ar-month').value);
+    var year  = parseInt(document.getElementById('ar-year').value);
+    var dates = [];
+    Object.keys(attendanceDB).forEach(function(key) {
+      var datePart = key.split('_')[0];
+      if (!datePart) return;
+      var d = new Date(datePart);
+      if (d.getMonth()===month && d.getFullYear()===year) {
+        if (dates.indexOf(datePart) === -1) dates.push(datePart);
+      }
+    });
+    return dates.sort();
+  } else {
+    // all time
+    var allDates = [];
+    Object.keys(attendanceDB).forEach(function(key) {
+      var datePart = key.split('_')[0];
+      if (datePart && allDates.indexOf(datePart) === -1) allDates.push(datePart);
+    });
+    return allDates.sort();
+  }
+}
+
+function renderAttReport() {
+  var now = new Date();
+  // Set defaults
+  var dateEl = document.getElementById('ar-date');
+  if (dateEl && !dateEl.value) dateEl.value = now.toISOString().split('T')[0];
+  var monthEl = document.getElementById('ar-month');
+  if (monthEl && !monthEl.value) monthEl.value = now.getMonth();
+
+  var cls    = document.getElementById('ar-class').value;
+  var filter = document.getElementById('ar-filter') ? document.getElementById('ar-filter').value : 'all';
+  var dates  = getAttDates();
+  var students = cls==='all' ? STUDENTS_MASTER : STUDENTS_MASTER.filter(function(s){return s.class===cls;});
+
+  // For daily mode: show individual status
+  if (attReportMode === 'daily') {
+    var date = dates[0];
+    var dateObj = new Date(date);
+    var dateStr = dateObj.toLocaleDateString('en-GB', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    document.getElementById('ar-title').textContent = 'Daily Report — ' + dateStr;
+    document.getElementById('ar-date-display').textContent = date;
+
+    var totalP=0,totalL=0,totalA=0;
+    students.forEach(function(s) {
+      var key = date+'_'+s.class;
+      var st = (attendanceDB[key]||{})[s.id]||'P';
+      if(st==='P')totalP++; else if(st==='L')totalL++; else totalA++;
+    });
+    var total=totalP+totalL+totalA;
+    var pct=total>0?Math.round((totalP+totalL)/total*100):0;
+    document.getElementById('ar-present').textContent=totalP;
+    document.getElementById('ar-late').textContent=totalL;
+    document.getElementById('ar-absent').textContent=totalA;
+    document.getElementById('ar-total').textContent=total;
+    document.getElementById('ar-pct').textContent=pct+'%';
+
+    var filtered=students.filter(function(s){
+      var key=date+'_'+s.class;
+      var st=(attendanceDB[key]||{})[s.id]||'P';
+      return filter==='all'||st===filter;
+    });
+    var tbody=document.getElementById('ar-tbody');
+    tbody.innerHTML = filtered.map(function(s,i){
+      var key=date+'_'+s.class;
+      var st=(attendanceDB[key]||{})[s.id]||'P';
+      var chipCls=s.class==='10 EM'?'em':'';
+      var badge=st==='P'?'<span style="background:#2e7d52;color:white;padding:3px 12px;border-radius:5px;font-size:12px;font-weight:700">Present</span>'
+        :st==='L'?'<span style="background:#e67e22;color:white;padding:3px 12px;border-radius:5px;font-size:12px;font-weight:700">Late</span>'
+        :'<span style="background:#c0392b;color:white;padding:3px 12px;border-radius:5px;font-size:12px;font-weight:700">Absent</span>';
+      var rowBg=st==='A'?'background:#fff5f5':st==='L'?'background:#fff8f0':'';
+      var phone = (STUDENTS_MASTER.find(function(x){return x.id===s.id;})||{}).phone||'';
+      var waBtn = phone
+        ? '<a href="https://wa.me/91' + phone + '?text=' + encodeURIComponent(buildStudentAttWA(s,st,date)) + '" target="_blank" style="background:#25d366;color:white;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">📱 WA</a>'
+        : '<span style="color:var(--muted);font-size:10px">No phone</span>';
+      return '<tr style="border-bottom:1px solid var(--border);'+rowBg+'">'
+        +'<td style="padding:8px 12px;color:var(--muted);font-size:12px">'+(i+1)+'</td>'
+        +'<td class="id-cell">'+s.id+'</td>'
+        +'<td class="name-cell">'+s.name+'</td>'
+        +'<td><span class="class-chip '+chipCls+'">'+s.class+'</span></td>'
+        +'<td style="text-align:center">'+badge+'</td>'
+        +'<td style="text-align:center">'+waBtn+'</td>'
+        +'</tr>';
+    }).join('');
+
+    // Absent/Late lists
+    var absentS=students.filter(function(s){return ((attendanceDB[date+'_'+s.class]||{})[s.id]||'P')==='A';});
+    var lateS=students.filter(function(s){return ((attendanceDB[date+'_'+s.class]||{})[s.id]||'P')==='L';});
+    var absCard=document.getElementById('ar-absent-card');
+    var latCard=document.getElementById('ar-late-card');
+    if(absentS.length===0){absCard.style.display='none';}
+    else{absCard.style.display='block';document.getElementById('ar-absent-list').innerHTML=absentS.map(function(s,i){return '<span style="display:inline-block;background:#fdecea;color:#c0392b;border:1px solid #f5c6c2;padding:3px 10px;border-radius:5px;margin:3px;font-size:12px;font-weight:600">'+(i+1)+'. '+s.name+' ('+s.class+')</span>';}).join(' ');}
+    if(lateS.length===0){latCard.style.display='none';}
+    else{latCard.style.display='block';document.getElementById('ar-late-list').innerHTML=lateS.map(function(s,i){return '<span style="display:inline-block;background:#fdecd2;color:#e67e22;border:1px solid #e67e22;padding:3px 10px;border-radius:5px;margin:3px;font-size:12px;font-weight:600">'+(i+1)+'. '+s.name+' ('+s.class+')</span>';}).join(' ');}
+
+  } else {
+    // Weekly / Monthly / All — show student-wise summary table
+    var modeLabel = attReportMode==='weekly'?'Weekly':attReportMode==='monthly'?'Monthly':'All Time';
+    document.getElementById('ar-title').textContent = modeLabel + ' Attendance Summary';
+    document.getElementById('ar-date-display').textContent = dates.length + ' days';
+    document.getElementById('ar-absent-card').style.display='none';
+    document.getElementById('ar-late-card').style.display='none';
+
+    // Calculate per-student totals
+    var totalP=0,totalL=0,totalA=0,totalAll=0;
+    var tbody=document.getElementById('ar-tbody');
+
+    if (dates.length===0) {
+      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No attendance records found for this period</td></tr>';
+      document.getElementById('ar-present').textContent=0;
+      document.getElementById('ar-late').textContent=0;
+      document.getElementById('ar-absent').textContent=0;
+      document.getElementById('ar-total').textContent=0;
+      document.getElementById('ar-pct').textContent='0%';
+      return;
+    }
+
+    tbody.innerHTML = students.map(function(s,i) {
+      var p=0,l=0,a=0;
+      dates.forEach(function(date) {
+        var key=date+'_'+s.class;
+        var st=(attendanceDB[key]||{})[s.id]||null;
+        if(st==='P')p++; else if(st==='L')l++; else if(st==='A')a++;
+      });
+      totalP+=p; totalL+=l; totalA+=a; totalAll+=(p+l+a);
+      var chipCls=s.class==='10 EM'?'em':'';
+      var pct2=p+l+a>0?Math.round((p+l)/(p+l+a)*100):0;
+      var pctColor=pct2>=75?'#2e7d52':pct2>=50?'#e67e22':'#c0392b';
+      var phone2 = (STUDENTS_MASTER.find(function(x){return x.id===s.id;})||{}).phone||'';
+      var sumMsg = '*അബക്കസ് അക്കാദമി - ഹാജര്‍ സംഗ്രഹം*' + '\n' + s.name + ' (' + s.class + ')' + '\n' + '---' + '\n' + 'ഹാജര്‍: ' + p + '  താമസം: ' + l + '  ഹാജരില്ല: ' + a + '\n' + 'ഹാജര്‍ %: ' + pct2 + '%' + '\n_അബക്കസ് അക്കാദമി_';
+      var waBtn2 = phone2
+        ? '<a href="https://wa.me/91'+phone2+'?text='+encodeURIComponent(sumMsg)+'" target="_blank" style="background:#25d366;color:white;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">📱 WA</a>'
+        : '<span style="color:var(--muted);font-size:10px">No phone</span>';
+      return '<tr style="border-bottom:1px solid var(--border)">'
+        +'<td style="padding:8px 10px;color:var(--muted);font-size:12px">'+(i+1)+'</td>'
+        +'<td class="id-cell">'+s.id+'</td>'
+        +'<td class="name-cell">'+s.name+'</td>'
+        +'<td><span class="class-chip '+chipCls+'">'+s.class+'</span></td>'
+        +'<td style="text-align:center;font-weight:700;color:#2e7d52">'+p+'</td>'
+        +'<td style="text-align:center;font-weight:700;color:#e67e22">'+l+'</td>'
+        +'<td style="text-align:center;font-weight:700;color:#c0392b">'+a+'</td>'
+        +'<td style="text-align:center;font-weight:700;color:'+pctColor+'">'+pct2+'%</td>'
+        +'<td style="text-align:center">'+waBtn2+'</td>'
+        +'</tr>';
+    }).join('');
+
+    var tot=totalP+totalL+totalA;
+    var overallPct=tot>0?Math.round((totalP+totalL)/tot*100):0;
+    document.getElementById('ar-present').textContent=totalP;
+    document.getElementById('ar-late').textContent=totalL;
+    document.getElementById('ar-absent').textContent=totalA;
+    document.getElementById('ar-total').textContent=dates.length+' days';
+    document.getElementById('ar-pct').textContent=overallPct+'%';
+  }
+}
+
+function printAttReport() {
+  const date   = document.getElementById('ar-date').value;
+  const cls    = document.getElementById('ar-class').value;
+  const dateObj = new Date(date);
+  const dateStr = dateObj.toLocaleDateString('en-GB', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  const students = cls==='all' ? STUDENTS_MASTER : STUDENTS_MASTER.filter(s=>s.class===cls);
+  const logo = localStorage.getItem('abacus_logo');
+  const logoHtml = logo ? '<img src="'+logo+'" style="height:36px;vertical-align:middle;margin-right:8px;border-radius:5px">' : '';
+
+  let p=0,l=0,a=0;
+  students.forEach(s => {
+    const key = date+'_'+s.class;
+    const st = (attendanceDB[key]||{})[s.id]||'P';
+    if(st==='P')p++; else if(st==='L')l++; else a++;
+  });
+
+  const rows = students.map((s,i) => {
+    const key = date+'_'+s.class;
+    const st = (attendanceDB[key]||{})[s.id]||'P';
+    const stText = st==='P'?'Present':st==='L'?'Late':'Absent';
+    const stColor = st==='P'?'#2e7d52':st==='L'?'#e67e22':'#c0392b';
+    return '<tr style="border-bottom:1px solid #eee">'
+      +'<td style="padding:7px 10px;font-size:12px;color:#888">'+(i+1)+'</td>'
+      +'<td style="padding:7px 10px;font-weight:700;font-size:12px">'+s.id+'</td>'
+      +'<td style="padding:7px 10px;font-weight:600">'+s.name+'</td>'
+      +'<td style="padding:7px 10px"><span style="background:'+(s.class==='10 EM'?'#1a6b3a':'#1a2744')+';color:'+(s.class==='10 EM'?'#a8f0c0':'#c9a84c')+';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">'+s.class+'</span></td>'
+      +'<td style="padding:7px 10px;font-weight:700;color:'+stColor+'">'+stText+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const win = window.open('','_blank');
+  if (!win) { showToast('Popup blocked! Allow popups and try again.', 'error'); return; }
+  win.document.write('<!DOCTYPE html><html><head><title>Attendance Report</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:20px}'
+    +'table{width:100%;border-collapse:collapse}th{background:#1a2744;color:#c9a84c;padding:9px 10px;text-align:left;font-size:11px;text-transform:uppercase}'
+    +'@media print{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}</style>'
+    +'</head><body>'
+    +'<div style="background:#1a2744;color:white;padding:14px 20px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center">'
+    +'<div>'+logoHtml+'<strong style="font-size:16px">Abacus Academy — Attendance Report</strong>'
+    +'<div style="font-size:12px;opacity:.8;margin-top:4px">'+dateStr+'</div></div>'
+    +'<div style="text-align:right;font-size:12px">'
+    +(cls!=='all'?'Class: '+cls:'All Classes')+'</div></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:14px;background:#f8f6f1;border:1px solid #ddd;border-top:none">'
+    +'<div style="text-align:center"><div style="font-size:22px;font-weight:700;color:#2e7d52">'+p+'</div><div style="font-size:11px;color:#888">Present</div></div>'
+    +'<div style="text-align:center"><div style="font-size:22px;font-weight:700;color:#e67e22">'+l+'</div><div style="font-size:11px;color:#888">Late</div></div>'
+    +'<div style="text-align:center"><div style="font-size:22px;font-weight:700;color:#c0392b">'+a+'</div><div style="font-size:11px;color:#888">Absent</div></div>'
+    +'<div style="text-align:center"><div style="font-size:22px;font-weight:700;color:#1a2744">'+(p+l+a)+'</div><div style="font-size:11px;color:#888">Total</div></div>'
+    +'<div style="text-align:center"><div style="font-size:22px;font-weight:700;color:#c9a84c">'+(p+l+a>0?Math.round((p+l)/(p+l+a)*100):0)+'%</div><div style="font-size:11px;color:#888">Attendance</div></div>'
+    +'</div>'
+    +'<table style="margin-top:0"><thead><tr><th>#</th><th>ID</th><th>Name</th><th>Class</th><th>Status</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table>'
+    +'<div style="text-align:center;font-size:10px;color:#999;margin-top:16px">Abacus Academy · Printed on '+new Date().toLocaleDateString('en-GB')+'</div>'
+    +'<scr'+'ipt>window.onload=()=>window.print()<\/scr'+'ipt></body></html>');
+  win.document.close();
+}
+
+function shareAttReportWA() {
+  var dates  = getAttDates();
+  var cls    = document.getElementById('ar-class').value;
+  var students = cls==='all' ? STUDENTS_MASTER : STUDENTS_MASTER.filter(function(s){return s.class===cls;});
+  var modeLabel = attReportMode==='daily'?'Daily':attReportMode==='weekly'?'Weekly':attReportMode==='monthly'?'Monthly':'All Time';
+
+  var divider = Array(30).join('-');
+  var msg = '*Abacus Academy - ' + modeLabel + ' Attendance Report*' + '\n';
+  if (cls!=='all') msg += 'Class: ' + cls + '\n';
+  msg += 'Period: ' + dates.length + ' day(s)' + '\n';
+  msg += divider + '\n';
+
+  if (attReportMode === 'daily' && dates.length > 0) {
+    var date = dates[0];
+    var dateObj = new Date(date);
+    var dayNames2 = ['ഞായര്‍','തിങ്കള്‍','ചൊവ്വ','ബുധന്‍','വ്യാഴം','വെള്ളി','ശനി'];
+    var monthNames2 = ['ജനുവരി','ഫെബ്രുവരി','മാര്‍ച്ച്','ഏപ്രില്‍','മേയ്','ജൂണ്‍','ജൂലൈ','ഓഗസ്റ്റ്','സെപ്തംബര്‍','ഒക്ടോബര്‍','നവംബര്‍','ഡിസംബര്‍'];
+    var malDateStr = dayNames2[dateObj.getDay()] + ', ' + dateObj.getDate() + ' ' + monthNames2[dateObj.getMonth()] + ' ' + dateObj.getFullYear();
+    msg = '*അബക്കസ് അക്കാദമി - ദൈനംദിന ഹാജര്‍*' + '\n';
+    msg += malDateStr + '\n';
+    if (cls!=='all') msg += 'ക്ലാസ്: ' + cls + '\n';
+    msg += divider + '\n';
+    var p=0,l=0,a=0;
+    var absentNames=[], lateNames=[];
+    students.forEach(function(s){
+      var st=(attendanceDB[date+'_'+s.class]||{})[s.id]||'P';
+      if(st==='P')p++; else if(st==='L'){l++;lateNames.push(s.name);} else {a++;absentNames.push(s.name);}
+    });
+    msg += 'ഹാജര്‍: ' + p + '  താമസം: ' + l + '  ഹാജരില്ല: ' + a + '\n';
+    msg += 'ഹാജര്‍ %: ' + (p+l+a>0?Math.round((p+l)/(p+l+a)*100):0) + '%' + '\n';
+    if (absentNames.length>0) { msg += '\n*ഹാജരില്ലാത്തവര്‍:*\n'; absentNames.forEach(function(n,i){msg+=(i+1)+'. '+n+'\n';}); }
+    if (lateNames.length>0) { msg += '\n*താമസിച്ച് വന്നവര്‍:*\n'; lateNames.forEach(function(n,i){msg+=(i+1)+'. '+n+'\n';}); }
+  } else {
+    // Summary for weekly/monthly/all
+    students.forEach(function(s) {
+      var p=0,l=0,a=0;
+      dates.forEach(function(date){
+        var st=(attendanceDB[date+'_'+s.class]||{})[s.id]||null;
+        if(st==='P')p++; else if(st==='L')l++; else if(st==='A')a++;
+      });
+      var pct=p+l+a>0?Math.round((p+l)/(p+l+a)*100):0;
+      msg += s.name + ': ഹാജര്‍=' + p + ' താമസം=' + l + ' ഇല്ല=' + a + ' (' + pct + '%)' + '\n';
+    });
+  }
+  msg += '\n_Abacus Academy_';
+
+  navigator.clipboard.writeText(msg).then(function(){
+    showToast('Copied! Opening WhatsApp...', 'success');
+    setTimeout(function(){ window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'); }, 500);
+  });
+}
+
+function buildStudentAttWA(s, status, date) {
+  var dateObj = new Date(date);
+  var day = dateObj.getDate();
+  var months = ['ജനുവരി','ഫെബ്രുവരി','മാര്‍ച്ച്','ഏപ്രില്‍','മേയ്','ജൂണ്‍','ജൂലൈ','ഓഗസ്റ്റ്','സെപ്തംബര്‍','ഒക്ടോബര്‍','നവംബര്‍','ഡിസംബര്‍'];
+  var days = ['ഞായര്‍','തിങ്കള്‍','ചൊവ്വ','ബുധന്‍','വ്യാഴം','വെള്ളി','ശനി'];
+  var dateStr = days[dateObj.getDay()] + ', ' + day + ' ' + months[dateObj.getMonth()] + ' ' + dateObj.getFullYear();
+
+  var msg = '*അബക്കസ് അക്കാദമി - ഹാജര്‍ വിവരം*' + '\n';
+  msg += dateStr + '\n';
+  msg += '---' + '\n';
+  msg += 'വിദ്യാര്‍ത്ഥി: *' + s.name + '*' + '\n';
+  msg += 'ക്ലാസ്: ' + s.class + '\n';
+
+  if (status === 'P') {
+    msg += 'ഹാജര്‍: *സന്നിഹിതന്‍/സന്നിഹിത*' + '\n';
+    msg += '\nനിങ്ങളുടെ കുട്ടി ഇന്ന് ക്ലാസില്‍ ഹാജരുണ്ടായിരുന്നു.' + '\n';
+  } else if (status === 'L') {
+    msg += 'ഹാജര്‍: *താമസിച്ച് വന്നു*' + '\n';
+    msg += '\nനിങ്ങളുടെ കുട്ടി ഇന്ന് ക്ലാസില്‍ *താമസിച്ചാണ്* എത്തിയത്. സമയം പാലിക്കാന്‍ ദയവായി ശ്രദ്ധിക്കണം.' + '\n';
+  } else {
+    msg += 'ഹാജര്‍: *ഹാജരില്ല*' + '\n';
+    msg += '\nനിങ്ങളുടെ കുട്ടി ഇന്ന് ക്ലാസില്‍ *ഹാജരായിരുന്നില്ല*. അസുഖമോ മറ്റ് കാരണമോ ഉണ്ടെങ്കില്‍ അക്കാദമിയെ അറിയിക്കണം.' + '\n';
+  }
+  msg += '\n_അബക്കസ് അക്കാദമി_';
+  return msg;
+}
+
+function _old_shareAttReportWA() {
+  var date = document.getElementById('ar-date').value;
+  var cls = document.getElementById('ar-class').value;
+  var dateObj = new Date(date);
+  var dateStr = dateObj.toLocaleDateString('en-GB', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+  var students = cls==='all' ? STUDENTS_MASTER : STUDENTS_MASTER.filter(function(s){return s.class===cls;});
+
+  var p=0,l=0,a=0;
+  var absentNames=[], lateNames=[];
+
+  students.forEach(function(s) {
+    var key = date+'_'+s.class;
+    var st = (attendanceDB[key]||{})[s.id]||'P';
+    if(st==='P') p++;
+    else if(st==='L') { l++; lateNames.push(s.name+' ('+s.class+')'); }
+    else { a++; absentNames.push(s.name+' ('+s.class+')'); }
+  });
+
+  var divider = Array(29).join('-');
+  var msg = '*Abacus Academy - Attendance Report*' + '\n';
+  msg += dateStr + '\n';
+  if (cls !== 'all') msg += 'Class: ' + cls + '\n';
+  msg += divider + '\n';
+  msg += 'Present: ' + p + '\n';
+  msg += 'Late Coming: ' + l + '\n';
+  msg += 'Absent: ' + a + '\n';
+  msg += 'Total: ' + (p+l+a) + '\n';
+  msg += 'Attendance: ' + (p+l+a>0?Math.round((p+l)/(p+l+a)*100):0) + '%' + '\n';
+  if (absentNames.length > 0) {
+    msg += '\n*Absent Students:*\n';
+    absentNames.forEach(function(n,i){msg+=(i+1)+'. '+n+'\n';});
+  }
+  if (lateNames.length > 0) {
+    msg += '\n*Late Coming:*\n';
+    lateNames.forEach(function(n,i){msg+=(i+1)+'. '+n+'\n';});
+  }
+  msg += '\n_Abacus Academy_'
+  navigator.clipboard.writeText(msg).then(() => {
+    showToast('Copied! Opening WhatsApp...', 'success');
+    setTimeout(() => window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank'), 500);
+  });
 }
 
 // ─── TIMETABLE ───────────────────────────────────────────────
@@ -3275,6 +4020,7 @@ function printTimetable() {
   }).join('');
 
   const win = window.open('','_blank');
+  if (!win) { showToast('Popup blocked! Allow popups and try again.', 'error'); return; }
   const ttHtml = '<!DOCTYPE html><html><head><title>Timetable - '+cls+'</title>'
     + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;padding:20px}'
     + 'table{width:100%;border-collapse:collapse}th{background:#1a2744;color:#c9a84c;padding:9px 10px;font-size:11px;text-transform:uppercase}'
@@ -3692,6 +4438,7 @@ function printWindow(title, bodyHTML) {
   const logo = localStorage.getItem('abacus_logo');
   const logoHtml = logo ? `<img src="${logo}" style="height:40px;vertical-align:middle;margin-right:10px;border-radius:6px">` : '';
   const win = window.open('', '_blank');
+  if (!win) { showToast('Popup blocked! Allow popups and try again.', 'error'); return; }
   win.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -4030,6 +4777,7 @@ function printSlip() {
   const histRows  = document.getElementById('slip-history').innerHTML;
 
   const win = window.open('', '_blank');
+  if (!win) { showToast('Popup blocked! Allow popups and try again.', 'error'); return; }
   win.document.write(`<!DOCTYPE html><html><head><title>Fee Slip - ${name}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
