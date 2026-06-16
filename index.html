@@ -2460,9 +2460,13 @@ function renderFeesRegister() {
     else if (s.liveTotalPaid > 0) badge = '<span class="paid-badge partial">⚠ Partial</span>';
     else badge = '<span class="paid-badge none">✗ Unpaid</span>';
 
-    // Show all 10 instalment columns
+    // Show all 10 instalment columns — use live payments from Google Sheet
+    const livePayList = allPayments
+      .filter(p => String(p.sl) === String(s.id))
+      .sort((a, b) => a.bill - b.bill)
+      .map(p => parseInt(p.amount) || 0);
     const instCells = [0,1,2,3,4,5,6,7,8,9].map(idx => {
-      const amt = s.payments[idx];
+      const amt = livePayList[idx] !== undefined ? livePayList[idx] : (s.payments[idx] || null);
       return amt
         ? `<td style="color:var(--green);font-weight:600;text-align:right;white-space:nowrap">₹${amt.toLocaleString('en-IN')}</td>`
         : `<td style="color:#ddd;text-align:center;font-size:11px">—</td>`;
