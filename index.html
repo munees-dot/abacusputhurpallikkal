@@ -2306,6 +2306,11 @@ function deleteStudent() {
   const idx = STUDENTS_MASTER.findIndex(x => x.id === currentStudentId);
   if (idx > -1) STUDENTS_MASTER.splice(idx, 1);
   delete studentMap[currentStudentId];
+  // Sync delete to Google Sheet
+  if (SCRIPT_URL) {
+    const params = new URLSearchParams({ action: 'deleteStudent', id: currentStudentId });
+    fetch(`${SCRIPT_URL}?${params}`).catch(() => {});
+  }
   showToast('Student removed: ' + s.name, 'error');
   closeAddEdit();
   renderStudentsMaster();
