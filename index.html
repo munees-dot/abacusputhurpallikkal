@@ -1053,7 +1053,7 @@ Abacus Academy</textarea></div>
 <script>
 
 // ─── STATE ───────────────────────────────────────────────
-let SCRIPT_URL = localStorage.getItem('abacus_script_url') || 'https://script.google.com/macros/s/AKfycbw4Gcjtl1eq7CThXEn2Dl7eYpYdju_PpYB2Q47Io01UHjKnhUSYIABAMBwcxZklZ52aoA/exec';
+let SCRIPT_URL = localStorage.getItem('abacus_script_url') || 'https://script.google.com/macros/s/AKfycbwOCHaLfHtGV0a2yVVXZ3V44oJoaK7wl_-GeasxmzgmNb_A1vn9g1NSYwtgMo6fZTxFqw/exec';
 
 
 let allPayments = [];
@@ -1195,7 +1195,7 @@ function checkPin() {
     updateAllClassDropdowns();
     const savedLogoInit = localStorage.getItem('abacus_logo');
     if (savedLogoInit) applyLogoToHeader(savedLogoInit);
-    SCRIPT_URL = localStorage.getItem('abacus_script_url') || '';
+    SCRIPT_URL = localStorage.getItem('abacus_script_url') || 'https://script.google.com/macros/s/AKfycbwOCHaLfHtGV0a2yVVXZ3V44oJoaK7wl_-GeasxmzgmNb_A1vn9g1NSYwtgMo6fZTxFqw/exec';
     if (!SCRIPT_URL) {
       nextBill = 3499; updateBillDisplay();
     } else {
