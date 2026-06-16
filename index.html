@@ -2265,9 +2265,16 @@ function saveStudent() {
     const idx = STUDENTS_MASTER.findIndex(x => x.id === currentStudentId);
     if (idx > -1) {
       STUDENTS_MASTER[idx] = { id, name, gender, phone, place, school, class: cls, dob };
-      // Also update studentMap
       studentMap[id] = { name, class: cls };
       showToast('✓ Student updated: ' + name, 'success');
+      // Sync update to Google Sheet
+      if (SCRIPT_URL) {
+        const params = new URLSearchParams({
+          action: 'updateStudent',
+          id, name, cls, gender, phone, place, dob, school
+        });
+        fetch(`${SCRIPT_URL}?${params}`).catch(() => {});
+      }
     }
   } else {
     // Check duplicate ID
@@ -2278,6 +2285,14 @@ function saveStudent() {
     studentMap[id] = { name, class: cls };
     document.getElementById('sm-total') && (document.getElementById('sm-total').textContent = STUDENTS_MASTER.length);
     showToast('✓ Student added: ' + name, 'success');
+    // Sync new student to Google Sheet
+    if (SCRIPT_URL) {
+      const params = new URLSearchParams({
+        action: 'addStudent',
+        id, name, cls, gender, phone, place, dob, school
+      });
+      fetch(`${SCRIPT_URL}?${params}`).catch(() => {});
+    }
   }
 
   closeAddEdit();
