@@ -224,7 +224,7 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
     </div>
   </div>
   <div class="header-right">
-    <div class="sync-status"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Ready</span></div>
+    <div class="sync-status"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Ready</span> <span style="font-size:10px;opacity:0.6;margin-left:4px" id="refresh-timer"></span></div>
     <button class="settings-btn" onclick="openSettings()">⚙ Settings</button>
     <button class="settings-btn" onclick="logoutAdmin()" style="background:rgba(201,168,76,.2);border-color:var(--gold)">🔒 Lock</button>
   </div>
@@ -1201,6 +1201,8 @@ function checkPin() {
     } else {
       loadData();
     }
+    // Start auto-refresh every 30 seconds
+    startAutoRefresh();
   } else {
     document.getElementById('pin-error').textContent = 'Wrong PIN. Try again.';
     pinEntry = '';
@@ -1369,6 +1371,63 @@ function printQRCodes() {
   win.document.close();
 }
 
+// ─── AUTO REFRESH ────────────────────────────────────────────
+var autoRefreshInterval = null;
+
+function startAutoRefresh() {
+  if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+  // Show countdown timer
+  var countdown = 30;
+  var timerEl = document.getElementById('refresh-timer');
+  var countdownInterval = setInterval(function() {
+    countdown--;
+    if (timerEl) timerEl.textContent = '(' + countdown + 's)';
+    if (countdown <= 0) countdown = 30;
+  }, 1000);
+
+  autoRefreshInterval = setInterval(function() {
+    countdown = 30;
+    if (!SCRIPT_URL) return;
+    // Silent background refresh
+    fetch(SCRIPT_URL + '?action=getAll')
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (!data.payments) return;
+        // Merge new payments
+        var sheetPayments = data.payments || [];
+        var sheetBills = new Set(sheetPayments.map(function(p){ return parseInt(p.bill); }));
+        var preloadedOnly = PRELOADED_PAYMENTS.filter(function(p){ return !sheetBills.has(parseInt(p.bill)); });
+        var newAll = [...sheetPayments, ...preloadedOnly];
+        newAll.sort(function(a,b){
+          function pd(s){if(!s)return null;var p=s.split('-');if(p.length!==3)return null;return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));}
+          var da=pd(a.date),db=pd(b.date);
+          if(!da&&!db)return b.bill-a.bill;
+          if(!da)return 1;if(!db)return -1;
+          return db-da||b.bill-a.bill;
+        });
+        // Only update if new data
+        if (newAll.length !== allPayments.length) {
+          allPayments = newAll;
+          updateStats();
+          renderTable(allPayments);
+          // Update next bill
+          if (data.nextBill) { nextBill = data.nextBill; updateBillDisplay(); }
+          // Show subtle notification
+          var dot = document.getElementById('syncDot');
+          var label = document.getElementById('syncLabel');
+          if(dot) dot.className = 'sync-dot';
+          if(label) label.textContent = 'Updated';
+          setTimeout(function(){ if(label) label.textContent = 'Synced'; }, 2000);
+        }
+      })
+      .catch(function(){});
+  }, 30000); // every 30 seconds
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshInterval) { clearInterval(autoRefreshInterval); autoRefreshInterval = null; }
+}
+
 window.onload = () => {
   // Check for QR login first
   if (checkQRLogin()) {
@@ -1441,6 +1500,34 @@ async function loadData() {
     });
     // Merge built-in students with any from sheet (sheet takes priority)
     studentMap = { ...BUILTIN_STUDENTS, ...(data.students || {}) };
+
+    // Update STUDENTS_MASTER from sheet students
+    if (data.students && Object.keys(data.students).length > 0) {
+      const sheetStudentIds = Object.keys(data.students);
+      sheetStudentIds.forEach(sid => {
+        const sheetStu = data.students[sid];
+        const existing = STUDENTS_MASTER.find(s => s.id === sid);
+        if (!existing) {
+          // New student from sheet — add to STUDENTS_MASTER
+          STUDENTS_MASTER.push({
+            id: sid,
+            name: sheetStu.name || '',
+            class: sheetStu.class || '',
+            phone: sheetStu.phone || '',
+            place: sheetStu.place || '',
+            school: sheetStu.school || '',
+            dob: sheetStu.dob || '',
+            gender: sheetStu.gender || ''
+          });
+        } else {
+          // Update existing with sheet data
+          existing.name = sheetStu.name || existing.name;
+          existing.class = sheetStu.class || existing.class;
+          existing.phone = sheetStu.phone || existing.phone;
+          existing.gender = sheetStu.gender || existing.gender;
+        }
+      });
+    }
     nextBill = data.nextBill || (allPayments.length > 0
       ? Math.max(...allPayments.map(p => parseInt(p.bill) || 0)) + 1
       : 3001);
