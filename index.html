@@ -1558,6 +1558,19 @@ async function loadData() {
     updateStats();
     renderTable(allPayments);
     populateClassFilter();
+    // Sync FEES_REGISTER with all students from STUDENTS_MASTER
+    STUDENTS_MASTER.forEach(s => {
+      const exists = FEES_REGISTER.find(r => r.id === s.id);
+      if (!exists) {
+        const totalFees = (typeof FEE_STRUCTURE !== 'undefined' && FEE_STRUCTURE[s.class])
+          ? FEE_STRUCTURE[s.class] : 11900;
+        FEES_REGISTER.push({
+          id: s.id, name: s.name, class: s.class,
+          totalFees: totalFees, payments: [], totalPaid: 0, balance: totalFees
+        });
+      }
+    });
+
     // Load attendance from sheet
     if (data.attendance) {
       Object.keys(data.attendance).forEach(key => {
@@ -2241,7 +2254,21 @@ function showTab(tab) {
     if (btn)  btn.classList.toggle('active', t === tab);
   });
   if (tab === 'students') renderStudentsMaster();
-  if (tab === 'fees-register') renderFeesRegister();
+  if (tab === 'fees-register') {
+    // Sync any missing students to FEES_REGISTER
+    STUDENTS_MASTER.forEach(s => {
+      const exists = FEES_REGISTER.find(r => r.id === s.id);
+      if (!exists) {
+        const totalFees = (typeof FEE_STRUCTURE !== 'undefined' && FEE_STRUCTURE[s.class])
+          ? FEE_STRUCTURE[s.class] : 11900;
+        FEES_REGISTER.push({
+          id: s.id, name: s.name, class: s.class,
+          totalFees: totalFees, payments: [], totalPaid: 0, balance: totalFees
+        });
+      }
+    });
+    renderFeesRegister();
+  }
   if (tab === 'income-log') renderIncomeLog();
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'attendance') renderAttendance();
@@ -2476,7 +2503,7 @@ function deleteStudent() {
 
 
 // ─── FEES REGISTER ───────────────────────────────────────────
-const FEES_REGISTER = [
+var FEES_REGISTER = [
   {"id":"6001","name":"ABDUL BASITH","class":"10 MM","totalFees":11900,"payments":[4000],"totalPaid":4000,"balance":7900},
   {"id":"6007","name":"MUHAMMED ADHIL P","class":"10 MM","totalFees":11900,"payments":[2000],"totalPaid":2000,"balance":9900},
   {"id":"6032","name":"MUHAMMED ASHMIL E","class":"10 MM","totalFees":11900,"payments":[4000],"totalPaid":4000,"balance":7900},
