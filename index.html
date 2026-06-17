@@ -1442,22 +1442,46 @@ function startAutoRefresh() {
           if(!da)return 1;if(!db)return -1;
           return db-da||b.bill-a.bill;
         });
-        // Only update if new data
+        // Update payments if changed
         if (newAll.length !== allPayments.length) {
           allPayments = newAll;
           updateStats();
           renderTable(allPayments);
-          // Update next bill
           if (data.nextBill) { nextBill = data.nextBill; updateBillDisplay(); }
-          // Show subtle notification
-          var dot = document.getElementById('syncDot');
-          var label = document.getElementById('syncLabel');
-          if(dot) dot.className = 'sync-dot';
-          if(label) label.textContent = 'Updated';
-          setTimeout(function(){ if(label) label.textContent = 'Synced'; }, 2000);
         }
+
+        // Always update attendance from sheet
+        if (data.attendance) {
+          var attChanged = false;
+          Object.keys(data.attendance).forEach(function(key) {
+            var newAtt = data.attendance[key];
+            var oldStr = JSON.stringify(attendanceDB[key] || {});
+            var newStr = JSON.stringify(newAtt);
+            if (oldStr !== newStr) {
+              attendanceDB[key] = newAtt;
+              attChanged = true;
+            }
+          });
+          if (attChanged) {
+            localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
+            // Re-render attendance if tab is open
+            var attPage = document.getElementById('attendance-page');
+            if (attPage && attPage.style.display !== 'none') renderAttendance();
+            var arPage = document.getElementById('att-report-page');
+            if (arPage && arPage.style.display !== 'none') renderAttReport();
+          }
+        }
+
+        // Update sync indicator
+        var dot = document.getElementById('syncDot');
+        var label = document.getElementById('syncLabel');
+        if(dot) dot.className = 'sync-dot';
+        if(label) label.textContent = 'Synced';
       })
-      .catch(function(){});
+      .catch(function(){
+        var dot = document.getElementById('syncDot');
+        if(dot) dot.className = 'sync-dot error';
+      });
   }, 30000); // every 30 seconds
 }
 
