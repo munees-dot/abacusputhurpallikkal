@@ -220,7 +220,7 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
     <div class="logo-icon" id="header-logo-placeholder">A</div>
     <div class="logo-text">
       <h1>Abacus Academy</h1>
-      <p>Fee Management Portal &nbsp;·&nbsp; 80 Students</p>
+      <p>Fee Management Portal &nbsp;·&nbsp; <span id="header-student-count">80</span> Students</p>
     </div>
   </div>
   <div class="header-right">
@@ -337,12 +337,8 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
 <!-- STUDENTS PAGE -->
 <div id="students-page" style="display:none">
 <div class="container">
-  <div class="sm-stats">
-    <div class="sm-stat"><strong>80</strong><span>Total Students</span></div>
-    <div class="sm-stat"><strong id="sm-mm">37</strong><span>10 MM</span></div>
-    <div class="sm-stat"><strong id="sm-em">43</strong><span>10 EM</span></div>
-    <div class="sm-stat"><strong id="sm-boys">—</strong><span>Boys</span></div>
-    <div class="sm-stat"><strong id="sm-girls">—</strong><span>Girls</span></div>
+  <div class="sm-stats" id="sm-stats-row">
+    <div class="sm-stat"><strong id="sm-total">0</strong><span>Total Students</span></div>
   </div>
   <div class="sm-controls">
     <input type="text" id="sm-search" placeholder="🔍 Search name, ID, place, school..." oninput="renderStudentsMaster()">
@@ -909,6 +905,20 @@ Abacus Academy</textarea></div>
     </div>
   </div>
 
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-header">💰 Fee Structure per Class</div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">ഓരോ class-നും total fees set ചെയ്യൂ. Fees Register-ൽ automatically update ആകും.</p>
+      <div id="fee-structure-list" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="text" id="fs-class" placeholder="Class (e.g. 9 A)" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;outline:none">
+        <input type="number" id="fs-fee" placeholder="Total Fee (₹)" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;outline:none">
+        <button onclick="addFeeStructure()" style="padding:8px 14px;background:var(--gold);color:var(--navy);border:none;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px">+ Add</button>
+      </div>
+      <button onclick="saveFeeStructure()" style="width:100%;padding:10px;background:var(--navy);color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">✓ Save Fee Structure</button>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header" style="background:#c0392b">⚠ Danger Zone</div>
     <div class="card-body">
@@ -1018,7 +1028,7 @@ Abacus Academy</textarea></div>
         <div class="modal-form-group full-width"><label>Full Name *</label><input type="text" id="ae-name" placeholder="e.g. MUHAMMED ALI K"></div>
         <div class="modal-form-group"><label>Gender *</label><select id="ae-gender"><option value="">Select</option><option value="Boy">Boy</option><option value="Girl">Girl</option></select></div>
         <div class="modal-form-group"><label>Phone Number</label><input type="text" id="ae-phone" placeholder="e.g. 9876543210"></div>
-        <div class="modal-form-group"><label>Date of Birth</label><input type="text" id="ae-dob" placeholder="DD-MM-YYYY"></div>
+        <div class="modal-form-group"><label>Date of Birth</label><input type="date" id="ae-dob" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;outline:none;background:var(--cream)"></div>
         <div class="modal-form-group"><label>Place / Location</label><input type="text" id="ae-place" placeholder="e.g. PALLIKKAL"></div>
         <div class="modal-form-group full-width"><label>School Name</label><input type="text" id="ae-school" placeholder="e.g. VPKMMHSS PUTHUR PALLIKKAL"></div>
       </div>
@@ -1311,6 +1321,18 @@ function saveTeacherAttendance() {
   const attKey = today + '_' + teacherClass;
   attendanceDB[attKey] = JSON.parse(JSON.stringify(teacherAttData));
   localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
+
+  // Save to Google Sheet
+  if (SCRIPT_URL) {
+    const params = new URLSearchParams({
+      action: 'saveAttendance',
+      date: today,
+      cls: teacherClass,
+      data: JSON.stringify(teacherAttData)
+    });
+    fetch(SCRIPT_URL + '?' + params).catch(() => {});
+  }
+
   showToast('Attendance saved for ' + teacherClass, 'success');
   setTimeout(() => {
     document.getElementById('teacherAttScreen').style.display = 'none';
@@ -1536,6 +1558,26 @@ async function loadData() {
     updateStats();
     renderTable(allPayments);
     populateClassFilter();
+    // Load attendance from sheet
+    if (data.attendance) {
+      Object.keys(data.attendance).forEach(key => {
+        if (!attendanceDB[key]) attendanceDB[key] = {};
+        Object.assign(attendanceDB[key], data.attendance[key]);
+      });
+      localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
+    }
+
+    // Load gender from sheet students
+    if (data.students) {
+      Object.keys(data.students).forEach(sid => {
+        const sheetStu = data.students[sid];
+        if (sheetStu.gender) {
+          const existing = STUDENTS_MASTER.find(s => s.id === sid);
+          if (existing && !existing.gender) existing.gender = sheetStu.gender;
+        }
+      });
+    }
+
     setSynced();
     // Refresh Income Log with latest data
     if (document.getElementById('income-log-page') && 
@@ -2228,10 +2270,27 @@ function renderStudentsMaster() {
   });
 
   document.getElementById('sm-count').textContent = filtered.length + ' students';
-  const boys = STUDENTS_MASTER.filter(s => s.gender === 'Boy').length;
+
+  // Dynamic class stats
+  const classCounts = {};
+  STUDENTS_MASTER.forEach(s => { classCounts[s.class] = (classCounts[s.class]||0)+1; });
+  const boys  = STUDENTS_MASTER.filter(s => s.gender === 'Boy').length;
   const girls = STUDENTS_MASTER.filter(s => s.gender === 'Girl').length;
-  if(document.getElementById('sm-boys')) document.getElementById('sm-boys').textContent = boys || '—';
-  if(document.getElementById('sm-girls')) document.getElementById('sm-girls').textContent = girls || '—';
+
+  const statsRow = document.getElementById('sm-stats-row');
+  if (statsRow) {
+    let statsHtml = '<div class="sm-stat"><strong id="sm-total">'+STUDENTS_MASTER.length+'</strong><span>Total Students</span></div>';
+    Object.keys(classCounts).sort().forEach(cls => {
+      statsHtml += '<div class="sm-stat"><strong>'+classCounts[cls]+'</strong><span>'+cls+'</span></div>';
+    });
+    if (boys)  statsHtml += '<div class="sm-stat"><strong style="color:#1a2744">'+boys+'</strong><span>Boys</span></div>';
+    if (girls) statsHtml += '<div class="sm-stat"><strong style="color:#6c3483">'+girls+'</strong><span>Girls</span></div>';
+    statsRow.innerHTML = statsHtml;
+  }
+
+  // Update header count
+  const hc = document.getElementById('header-student-count');
+  if (hc) hc.textContent = STUDENTS_MASTER.length;
 
   const tbody = document.getElementById('sm-tbody');
   if (!filtered.length) {
@@ -2322,7 +2381,13 @@ function openEditStudent(id) {
   document.getElementById('ae-class').value = s.class;
   document.getElementById('ae-gender').value = s.gender || '';
   document.getElementById('ae-phone').value = s.phone;
-  document.getElementById('ae-dob').value = s.dob;
+  // Convert DD-MM-YYYY to YYYY-MM-DD for date input
+  var dobVal = s.dob || '';
+  if (dobVal && dobVal.includes('-') && dobVal.split('-').length === 3) {
+    var dp = dobVal.split('-');
+    if (dp[0].length === 2) dobVal = dp[2] + '-' + dp[1] + '-' + dp[0]; // DD-MM-YYYY → YYYY-MM-DD
+  }
+  document.getElementById('ae-dob').value = dobVal;
   document.getElementById('ae-place').value = s.place;
   document.getElementById('ae-school').value = s.school;
   document.getElementById('ae-delete-btn').style.display = 'inline-block';
@@ -2340,7 +2405,13 @@ function saveStudent() {
   const cls = document.getElementById('ae-class').value;
   const gender = document.getElementById('ae-gender').value;
   const phone = document.getElementById('ae-phone').value.trim();
-  const dob = document.getElementById('ae-dob').value.trim();
+  const dobRaw = document.getElementById('ae-dob').value.trim();
+  // Convert YYYY-MM-DD to DD-MM-YYYY
+  let dob = dobRaw;
+  if (dobRaw && dobRaw.includes('-') && dobRaw.split('-')[0].length === 4) {
+    const dp = dobRaw.split('-');
+    dob = dp[2] + '-' + dp[1] + '-' + dp[0];
+  }
   const place = document.getElementById('ae-place').value.trim().toUpperCase();
   const school = document.getElementById('ae-school').value.trim().toUpperCase();
 
@@ -3194,7 +3265,28 @@ function saveAttendance() {
   localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
   const date = document.getElementById('att-date').value;
   const cls  = document.getElementById('att-class').value;
-  showToast('✓ Attendance saved for ' + cls + ' — ' + date, 'success');
+  const key  = date + '_' + cls;
+  const saved = attendanceDB[key] || {};
+
+  // Save to Google Sheet
+  if (SCRIPT_URL) {
+    const attData = JSON.stringify(saved);
+    const params = new URLSearchParams({
+      action: 'saveAttendance',
+      date: date,
+      cls: cls,
+      data: attData
+    });
+    fetch(SCRIPT_URL + '?' + params)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) showToast('Attendance saved — ' + cls + ' ' + date, 'success');
+        else showToast('Saved locally. Sheet sync failed.', 'error');
+      })
+      .catch(() => showToast('Saved locally only', 'error'));
+  } else {
+    showToast('Attendance saved locally — ' + cls + ' ' + date, 'success');
+  }
 }
 
 function toggleMonthlySummary() {
@@ -3405,6 +3497,65 @@ function saveEditTotalFee() {
   if (document.getElementById('dashboard-page').style.display !== 'none') renderDashboard();
 
   showToast('Total fee updated: ₹' + oldFee.toLocaleString('en-IN') + ' → ₹' + newFee.toLocaleString('en-IN'), 'success');
+}
+
+// ─── FEE STRUCTURE ───────────────────────────────────────────
+var FEE_STRUCTURE = JSON.parse(localStorage.getItem('abacus_fee_structure') || 'null') || {
+  '10 MM': 11900,
+  '10 EM': 11900
+};
+
+
+function addFeeStructure() {
+  const cls = document.getElementById('fs-class').value.trim().toUpperCase();
+  const fee = parseInt(document.getElementById('fs-fee').value);
+  if (!cls) { showToast('Enter class name', 'error'); return; }
+  if (!fee || fee < 1) { showToast('Enter valid fee', 'error'); return; }
+  FEE_STRUCTURE[cls] = fee;
+  document.getElementById('fs-class').value = '';
+  document.getElementById('fs-fee').value = '';
+  renderFeeStructure();
+  showToast('Added: ' + cls + ' = Rs.' + fee, 'success');
+}
+
+function updateFeeFromInput(btn) {
+  var cls = btn.dataset.cls;
+  var safeId = 'fv-fs-' + cls.replace(/[^a-zA-Z0-9]/g,'_');
+  var input = document.getElementById(safeId);
+  if (!input) return;
+  var fee = parseInt(input.value);
+  if (fee > 0) {
+    FEE_STRUCTURE[cls] = fee;
+    showToast('Updated: ' + cls + ' = Rs.' + fee, 'success');
+  }
+}
+
+function deleteFeeStructure(cls) {
+  if (!confirm('Remove fee structure for ' + cls + '?')) return;
+  delete FEE_STRUCTURE[cls];
+  renderFeeStructure();
+  showToast('Removed: ' + cls, 'error');
+}
+
+function saveFeeStructure() {
+  localStorage.setItem('abacus_fee_structure', JSON.stringify(FEE_STRUCTURE));
+
+  // Update FEES_REGISTER total fees for each class
+  FEES_REGISTER.forEach(r => {
+    const fee = FEE_STRUCTURE[r.class];
+    if (fee) {
+      r.totalFees = fee;
+      r.balance = fee - r.totalPaid;
+    }
+  });
+
+  renderFeeStructure();
+  showToast('Fee structure saved! Fees Register updated.', 'success');
+
+  // Re-render fees register if open
+  if (document.getElementById('fees-register-page').style.display !== 'none') {
+    renderFeesRegister();
+  }
 }
 
 // ─── CLASS MANAGEMENT ────────────────────────────────────────
@@ -4953,6 +5104,7 @@ function printSlip() {
 // ─── SETUP TAB ───────────────────────────────────────────────
 function loadSetupValues() {
   generateQRCodes();
+  renderFeeStructure();
   document.getElementById('setup-script-url').value = SCRIPT_URL || '';
   document.getElementById('setup-bill-no').value = nextBill || '';
   renderClassList();
@@ -5063,7 +5215,33 @@ function saveSetupBill() {
 }
 
 function saveSetupInfo() {
-  showToast('✓ Details saved', 'success');
+  showToast('Details saved', 'success');
+}
+
+function syncStudentsToSheet() {
+  if (!SCRIPT_URL) { showToast('Connect Google Sheet first', 'error'); return; }
+  var count = 0;
+  var total = STUDENTS_MASTER.length;
+  showToast('Syncing ' + total + ' students to Sheet...', 'success');
+
+  function syncNext(idx) {
+    if (idx >= STUDENTS_MASTER.length) {
+      showToast('All ' + count + ' students synced to Google Sheet!', 'success');
+      return;
+    }
+    var s = STUDENTS_MASTER[idx];
+    var params = new URLSearchParams({
+      action: 'addStudent',
+      id: s.id, name: s.name, cls: s.class,
+      gender: s.gender||'', phone: s.phone||'',
+      place: s.place||'', dob: s.dob||'', school: s.school||''
+    });
+    fetch(SCRIPT_URL + '?' + params)
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if(d.success) count++; setTimeout(function(){ syncNext(idx+1); }, 100); })
+      .catch(function(){ setTimeout(function(){ syncNext(idx+1); }, 100); });
+  }
+  syncNext(0);
 }
 
 function clearAllSettings() {
