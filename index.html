@@ -1451,25 +1451,17 @@ function startAutoRefresh() {
         }
 
         // Always update attendance from sheet
-        if (data.attendance) {
-          var attChanged = false;
+        if (data.attendance && Object.keys(data.attendance).length > 0) {
+          // Merge sheet attendance into local (sheet takes priority)
           Object.keys(data.attendance).forEach(function(key) {
-            var newAtt = data.attendance[key];
-            var oldStr = JSON.stringify(attendanceDB[key] || {});
-            var newStr = JSON.stringify(newAtt);
-            if (oldStr !== newStr) {
-              attendanceDB[key] = newAtt;
-              attChanged = true;
-            }
+            attendanceDB[key] = data.attendance[key];
           });
-          if (attChanged) {
-            localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
-            // Re-render attendance if tab is open
-            var attPage = document.getElementById('attendance-page');
-            if (attPage && attPage.style.display !== 'none') renderAttendance();
-            var arPage = document.getElementById('att-report-page');
-            if (arPage && arPage.style.display !== 'none') renderAttReport();
-          }
+          localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
+          // Re-render if attendance tab open
+          var attPage = document.getElementById('attendance-page');
+          if (attPage && attPage.style.display !== 'none') renderAttendance();
+          var arPage = document.getElementById('att-report-page');
+          if (arPage && arPage.style.display !== 'none') renderAttReport();
         }
 
         // Update sync indicator
@@ -1610,11 +1602,10 @@ async function loadData() {
       }
     });
 
-    // Load attendance from sheet
-    if (data.attendance) {
-      Object.keys(data.attendance).forEach(key => {
-        if (!attendanceDB[key]) attendanceDB[key] = {};
-        Object.assign(attendanceDB[key], data.attendance[key]);
+    // Load attendance from sheet (sheet takes priority over local)
+    if (data.attendance && Object.keys(data.attendance).length > 0) {
+      Object.keys(data.attendance).forEach(function(key) {
+        attendanceDB[key] = data.attendance[key];
       });
       localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
     }
