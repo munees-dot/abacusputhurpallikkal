@@ -105,25 +105,28 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
 .pay-history td{padding:8px 10px;border-bottom:1px solid var(--border)}.pay-history .amount{font-weight:700;color:var(--green)}
 .fee-summary{background:var(--cream);border-radius:10px;padding:16px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .fee-summary-item{text-align:center}.fee-summary-item .fs-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}.fee-summary-item .fs-value{font-size:18px;font-weight:700;margin-top:2px}
-#fees-register-page .container{max-width:100%;padding:28px 16px}
-#fees-register-page .sm-table{min-width:1600px}
-#fees-register-page .sm-table thead th{padding:11px 10px;font-size:10px;white-space:nowrap}
-#fees-register-page .sm-table tbody td{padding:9px 10px;font-size:12px}
-#income-log-page .container{max-width:700px;padding:28px 16px;margin:0 auto}
-#income-log-page .sm-table{min-width:unset;width:700px;max-width:700px;table-layout:fixed}
-#income-log-page .sm-table-wrap{max-width:700px;overflow-x:hidden}
+#fees-register-page .container{max-width:100%;padding:16px 8px}
+#fees-register-page .sm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#fees-register-page .sm-table{min-width:1400px}
+#fees-register-page .sm-table thead th{padding:8px 8px;font-size:10px;white-space:nowrap}
+#fees-register-page .sm-table tbody td{padding:7px 8px;font-size:11px}
+#income-log-page .container{max-width:100%;padding:16px 8px;margin:0 auto}
+#income-log-page .sm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#income-log-page .sm-table{min-width:600px;width:100%;table-layout:auto}
 #income-log-page .sm-table tbody td{padding:6px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#income-log-page .sm-table thead th{padding:7px 8px;font-size:10px}
-#income-log-page .sm-table th:nth-child(1){width:35px}#income-log-page .sm-table th:nth-child(2){width:70px}#income-log-page .sm-table th:nth-child(3){width:55px}#income-log-page .sm-table th:nth-child(4){width:180px}#income-log-page .sm-table th:nth-child(5){width:75px}#income-log-page .sm-table th:nth-child(6){width:85px}#income-log-page .sm-table th:nth-child(7){width:90px}#income-log-page .sm-table th:nth-child(8){width:60px}
-#pending-page .container{max-width:900px;padding:28px 16px;margin:0 auto}
-#pending-page .sm-table{min-width:unset;width:900px;max-width:900px;table-layout:fixed}
-#pending-page .sm-table-wrap{max-width:900px;overflow-x:hidden}
-#pending-page .sm-table tbody td{padding:6px 8px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#pending-page .sm-table thead th{padding:7px 8px;font-size:10px}
-#pending-page .sm-table th:nth-child(1){width:35px}#pending-page .sm-table th:nth-child(2){width:55px}#pending-page .sm-table th:nth-child(3){width:170px}#pending-page .sm-table th:nth-child(4){width:70px}#pending-page .sm-table th:nth-child(5){width:100px}#pending-page .sm-table th:nth-child(6){width:75px}#pending-page .sm-table th:nth-child(7){width:75px}#pending-page .sm-table th:nth-child(8){width:85px}#pending-page .sm-table th:nth-child(9){width:75px}#pending-page .sm-table th:nth-child(10){width:90px}
+#income-log-page .sm-table thead th{padding:7px 8px;font-size:10px;white-space:nowrap}
+#pending-page .container{max-width:100%;padding:16px 8px;margin:0 auto}
+#pending-page .sm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#pending-page .sm-table{min-width:700px;width:100%;table-layout:auto}
+#pending-page .sm-table tbody td{padding:6px 8px;font-size:12px;white-space:nowrap}
+#pending-page .sm-table thead th{padding:7px 8px;font-size:10px;white-space:nowrap}
 #dashboard-page .stat-card{padding:10px 12px}#dashboard-page .stat-value{font-size:16px!important}#dashboard-page .stat-label{font-size:10px}#dashboard-page .stat-sub{font-size:10px}#dashboard-page .card-header{padding:10px 14px;font-size:12px}#dashboard-page .card-body{padding:10px!important}#dashboard-page canvas{max-height:160px}#dashboard-page .container{max-width:700px}
 .sm-table td{vertical-align:middle}
-@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+@media(max-width:768px){
+  .sm-table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  .table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+  .nav-tabs{-webkit-overflow-scrolling:touch}
+.stats-row{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
 .login-screen{position:fixed;inset:0;background:var(--navy);z-index:9999;display:flex;align-items:center;justify-content:center}
 .login-box{background:white;border-radius:20px;padding:40px;width:380px;max-width:95vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}
 .login-logo{width:70px;height:70px;background:var(--gold);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:var(--navy);margin:0 auto 16px}
@@ -214,6 +217,16 @@ tbody td .class-chip.em{background:#1a6b3a;color:#a8f0c0}
     <button onclick="saveTeacherAttendance()" style="width:100%;padding:14px;background:var(--gold);color:var(--navy);border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:15px;margin-top:16px">💾 Save Attendance</button>
   </div>
 </div>
+
+<style>
+.t-btn { flex:1;padding:12px 8px;border-radius:8px;font-weight:700;cursor:pointer;font-size:15px;border:2px solid transparent;transition:all 0.1s;-webkit-tap-highlight-color:transparent;touch-action:manipulation }
+.t-btn-p { background:#e8f5ee;color:#2e7d52;border-color:#2e7d52 }
+.t-btn-p.active { background:#2e7d52;color:white }
+.t-btn-l { background:#fdecd2;color:#e67e22;border-color:#e67e22 }
+.t-btn-l.active { background:#e67e22;color:white }
+.t-btn-a { background:#fdecea;color:#c0392b;border-color:#c0392b }
+.t-btn-a.active { background:#c0392b;color:white }
+</style>
 
 <header>
   <div class="logo">
@@ -1269,15 +1282,8 @@ function openTeacherAtt(cls) {
 }
 
 function teacherBtn(id, st, current) {
-  var colors = {
-    P: {on:'#2e7d52', off:'#e8f5ee', txt:'#2e7d52'},
-    L: {on:'#e67e22', off:'#fdecd2', txt:'#e67e22'},
-    A: {on:'#c0392b', off:'#fdecea', txt:'#c0392b'}
-  };
-  var c = colors[st];
-  var active = current === st;
-  var style = 'flex:1;padding:10px;border-radius:7px;font-weight:700;cursor:pointer;font-size:14px;border:' + (active?'none':'1.5px solid '+c.on) + ';background:' + (active?c.on:c.off) + ';color:' + (active?'white':c.txt);
-  return '<button style="' + style + '" data-id="' + id + '" data-st="' + st + '" onclick="setTeacherAtt(this.dataset.id,this.dataset.st)">' + st + '</button>';
+  var cls = 't-btn t-btn-' + st.toLowerCase() + (current===st?' active':'');
+  return '<button class="' + cls + '" data-id="' + id + '" data-st="' + st + '" onclick="setTeacherAtt(this.dataset.id,this.dataset.st)">' + st + '</button>';
 }
 
 function renderTeacherAttList(cls, dateKey) {
@@ -1323,27 +1329,30 @@ function teacherMarkAll(status) {
 }
 
 function saveTeacherAttendance() {
-  const today = new Date().toISOString().split('T')[0];
-  const attKey = today + '_' + teacherClass;
+  var today = new Date().toISOString().split('T')[0];
+  var attKey = today + '_' + teacherClass;
   attendanceDB[attKey] = JSON.parse(JSON.stringify(teacherAttData));
   localStorage.setItem('abacus_attendance', JSON.stringify(attendanceDB));
 
   // Save to Google Sheet
   if (SCRIPT_URL) {
-    const params = new URLSearchParams({
-      action: 'saveAttendance',
-      date: today,
-      cls: teacherClass,
-      data: JSON.stringify(teacherAttData)
-    });
-    fetch(SCRIPT_URL + '?' + params).catch(() => {});
+    var attJson = JSON.stringify(teacherAttData);
+    var url = SCRIPT_URL + '?action=saveAttendance&date=' + today + '&cls=' + encodeURIComponent(teacherClass) + '&data=' + encodeURIComponent(attJson);
+    fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(d){ 
+        if(d.success) showToast('Attendance saved to Sheet! ' + teacherClass, 'success');
+        else showToast('Saved locally. Sheet: ' + (d.error||'error'), 'error');
+      })
+      .catch(function(){ showToast('Saved locally only', 'error'); });
+  } else {
+    showToast('Attendance saved locally — ' + teacherClass, 'success');
   }
 
-  showToast('Attendance saved for ' + teacherClass, 'success');
-  setTimeout(() => {
+  setTimeout(function() {
     document.getElementById('teacherAttScreen').style.display = 'none';
     window.location.href = window.location.pathname;
-  }, 1500);
+  }, 2000);
 }
 
 // ─── QR CODE GENERATOR ───────────────────────────────────────
